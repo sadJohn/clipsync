@@ -1,4 +1,4 @@
-import { SocketEvents } from '../constants/socket'
+import type { SocketEvents } from '../constants/socket'
 import type { ClipItemDto } from './clip'
 
 export interface SyncNewClipPayload {

@@ -153,7 +153,7 @@ pnpm --filter @clipsync/desktop dist:linux
 
 打包前注意：
 
-- `apps/desktop/.env` 中的 `VITE_SERVER_URL` 会被打进产物，分享给别人前需指向云端后端
+- `apps/desktop/.env` 中的 `VITE_SERVER_URL` 会被打进产物，分享给别人前需指向云端后端；`dist:*` 脚本会先执行 `check:server-url` 预检，缺失、指向 localhost 或末尾带斜杠时直接中止
 - `better-sqlite3` 是原生模块，需在目标平台上构建（Windows 包在 Windows 上打），并在 `electron-builder.yml` 中保持 `asarUnpack`
 - 未签名 / 未公证的 macOS 包在别人机器上会被 Gatekeeper 拦截，需右键「打开」；正式分发需 Apple Developer ID + notarize
 - 应用图标为 `resources/icon-1024.png`，托盘图标为 `resources/icon.png`（含 `@2x`）
@@ -189,6 +189,8 @@ sqlite3 "$HOME/Library/Application Support/ClipSync/clipsync-local.db" \
 | `pnpm dev`                                   | 同时启动 shared watch、后端与桌面端 |
 | `pnpm build`                                 | 构建全部工作区                      |
 | `pnpm typecheck`                             | 全部工作区类型检查                  |
+| `pnpm lint`                                  | 全部工作区 ESLint 检查（共享配置）  |
+| `pnpm format`                                | Prettier 格式化（单引号、无分号）   |
 | `pnpm --filter @clipsync/shared build`       | 单独构建共享包                      |
 | `pnpm --filter @clipsync/server prisma:push` | 同步 Prisma schema 到云端数据库     |
 | `pnpm --filter @clipsync/desktop dev`        | 以开发模式启动桌面端                |

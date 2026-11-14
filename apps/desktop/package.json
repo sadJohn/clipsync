@@ -10,17 +10,20 @@
     "build": "electron-vite build",
     "start": "electron-vite preview",
     "pack:dir": "electron-vite build && electron-builder --dir",
-    "dist:mac": "electron-vite build && electron-builder --mac",
-    "dist:win": "electron-vite build && electron-builder --win",
-    "dist:linux": "electron-vite build && electron-builder --linux",
+    "check:server-url": "node scripts/check-server-url.mjs",
+    "dist:mac": "node scripts/check-server-url.mjs && electron-vite build && electron-builder --mac",
+    "dist:win": "node scripts/check-server-url.mjs && electron-vite build && electron-builder --win",
+    "dist:linux": "node scripts/check-server-url.mjs && electron-vite build && electron-builder --linux",
     "postinstall": "electron-rebuild -f -w better-sqlite3",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
     "clean": "rm -rf out release"
   },
   "dependencies": {
     "better-sqlite3": "^13.2.0"
   },
   "devDependencies": {
+    "@clipsync/eslint-config": "workspace:*",
     "@clipsync/shared": "workspace:*",
     "@electron/rebuild": "^4.2.1",
     "@radix-ui/react-dialog": "^1.3.1",
