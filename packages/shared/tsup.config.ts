@@ -6,7 +6,7 @@ export default defineConfig({
   target: 'es2022',
   dts: true,
   sourcemap: true,
-  clean: true,
+  clean: false,
   treeshake: true,
   splitting: false,
   outExtension({ format }) {
