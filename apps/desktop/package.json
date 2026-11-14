@@ -1,0 +1,34 @@
+{
+  "name": "@clipsync/desktop",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ClipSync 桌面客户端（Electron + React + better-sqlite3）",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "postinstall": "electron-rebuild -f -w better-sqlite3",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf out"
+  },
+  "dependencies": {
+    "@clipsync/shared": "workspace:*",
+    "better-sqlite3": "^13.2.0",
+    "drizzle-orm": "^0.45.4"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.2.1",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "electron": "^45.3.2",
+    "electron-vite": "^6.0.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "^5.7.2",
+    "vite": "^7.3.8"
+  }
+}
