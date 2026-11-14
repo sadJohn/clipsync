@@ -32,6 +32,7 @@ pnpm --filter @clipsync/server prisma:push    # 同步 schema 到云端 PostgreS
 - `apps/server/.env` 含真实密钥，已被 gitignore，禁止输出或提交。
 - 桌面端 `dependencies` 只保留 `better-sqlite3`：其余依赖均被 Vite 打进产物，放 `devDependencies` 可避免 electron-builder 重复打包。新增原生模块时，必须同时加入 [electron-builder.yml](apps/desktop/electron-builder.yml) 的 `asarUnpack`。打包产物在 `apps/desktop/release/`（已 gitignore），`pack:dir` 用于快速验证，`dist:mac` / `dist:win` 生成安装包且需在对应平台执行；`dist:*` 会先执行 `check:server-url` 预检 `VITE_SERVER_URL`。
 - Lint / 格式化是共享配置：规则在 [packages/eslint-config](packages/eslint-config)（导出 `@clipsync/eslint-config` 与 `@clipsync/eslint-config/react`），各 workspace 只保留一个 `eslint.config.mjs` 引用它；Prettier 配置在根 `.prettierrc.json`。新增 package 时复用共享配置，不要各自安装一套 ESLint 插件。
+- 发布走 [.github/workflows/release.yml](.github/workflows/release.yml)：推送 `v*` tag 触发 macOS / Windows 打包并上传 Release，依赖仓库变量 `VITE_SERVER_URL`；`workflow_dispatch` 只构建不上传。
 
 ## 数据与同步链路
 

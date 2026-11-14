@@ -162,6 +162,24 @@ pnpm --filter @clipsync/desktop dist:linux
 
 后端是长驻服务并依赖 Socket.IO，推荐部署到 Render Web Service（不建议 Vercel Serverless）。完整步骤见 [docs/deploy-render.md](docs/deploy-render.md)。
 
+## 发布到 GitHub Releases
+
+仓库内置工作流 [.github/workflows/release.yml](.github/workflows/release.yml)：推送 `v*` tag 时，在 macOS 与 Windows runner 上分别打包并上传安装包。
+
+使用前：
+
+1. 在仓库 **Settings → Secrets and variables → Actions → Variables** 添加 `VITE_SERVER_URL`，值为线上后端地址（会被打进安装包）
+2. 推送 tag 触发构建：
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+产物：macOS `.dmg` / `.zip`，Windows `.exe`，自动挂到对应 Release 下。
+
+未配置签名证书时，macOS 包在别人机器上会被 Gatekeeper 拦截（需右键打开），Windows 会出现 SmartScreen 提示；正式分发需补充 Apple Developer ID 公证与 Windows 代码签名。
+
 ## 验证清单
 
 ```bash
