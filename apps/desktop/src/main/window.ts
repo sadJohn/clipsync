@@ -63,7 +63,7 @@ export function createMainWindow(): BrowserWindow {
   if (rendererUrl) {
     void win.loadURL(rendererUrl)
   } else {
-    void win.loadFile(join(__dirname, '../renderer/index.html'))
+    void win.loadURL('app://clipsync/index.html')
   }
 
   mainWindow = win

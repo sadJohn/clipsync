@@ -4,6 +4,11 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
     "types": ["node", "electron-vite/node", "vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/renderer/src/*"],
+      "@renderer/*": ["src/renderer/src/*"]
+    },
     "noEmit": true,
     "declaration": false,
     "declarationMap": false,

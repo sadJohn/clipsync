@@ -42,6 +42,32 @@ export const localClipService = {
     return record
   },
 
+  /**
+   * 写入来自云端 / 其他设备的记录：已存在则更新并标记为已同步，否则插入。
+   */
+  upsertRemote(record: LocalClipRecord): LocalClipRecord {
+    const db = getDb()
+    const syncedRecord: LocalClipRecord = { ...record, isSynced: true }
+    const existing = db.select().from(localClips).where(eq(localClips.id, record.id)).get()
+
+    if (existing) {
+      db.update(localClips)
+        .set({
+          content: syncedRecord.content,
+          type: syncedRecord.type,
+          deviceName: syncedRecord.deviceName,
+          isPinned: syncedRecord.isPinned,
+          isSynced: true,
+        })
+        .where(eq(localClips.id, record.id))
+        .run()
+    } else {
+      db.insert(localClips).values(syncedRecord).run()
+    }
+
+    return this.getById(record.id) ?? syncedRecord
+  },
+
   delete(id: string): void {
     getDb().delete(localClips).where(eq(localClips.id, id)).run()
   },

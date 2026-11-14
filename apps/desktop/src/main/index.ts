@@ -1,6 +1,7 @@
-import { join } from 'node:path'
+import { join, normalize } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { IpcChannels } from '@clipsync/shared'
-import { app } from 'electron'
+import { app, net, protocol } from 'electron'
 import { closeDb } from './db/client'
 import { registerIpcHandlers } from './ipc'
 import { ClipboardWatcher } from './services/clipboard-watcher'
@@ -9,6 +10,35 @@ import { createTrayManager } from './services/tray-manager'
 import { createMainWindow, getMainWindow, markQuitting, showWindow, toggleWindow } from './window'
 
 app.setName('ClipSync')
+
+// 生产环境使用自定义 app:// 协议加载渲染页，保证有稳定的 Origin 供云端 CORS 校验
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'app',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+    },
+  },
+])
+
+function registerAppProtocol(): void {
+  const rendererDir = join(__dirname, '../renderer')
+
+  protocol.handle('app', (request) => {
+    const { pathname } = new URL(request.url)
+    const relativePath = decodeURIComponent(pathname === '/' ? '/index.html' : pathname)
+    const filePath = normalize(join(rendererDir, relativePath))
+
+    if (!filePath.startsWith(rendererDir)) {
+      return new Response('Forbidden', { status: 403 })
+    }
+
+    return net.fetch(pathToFileURL(filePath).toString())
+  })
+}
 
 const watcher = new ClipboardWatcher()
 
@@ -22,6 +52,7 @@ if (!hasSingleInstanceLock) {
   })
 
   void app.whenReady().then(() => {
+    registerAppProtocol()
     createMainWindow()
 
     registerIpcHandlers({

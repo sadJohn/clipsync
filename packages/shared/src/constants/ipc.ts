@@ -12,6 +12,8 @@ export const IpcChannels = {
   DELETE_LOCAL_CLIP: 'local-clips:delete',
   /** 渲染进程 -> 主进程：标记本地记录已同步至云端 */
   MARK_CLIP_SYNCED: 'local-clips:mark-synced',
+  /** 渲染进程 -> 主进程：将云端 / 其他设备推送的记录写入本地 SQLite */
+  UPSERT_REMOTE_CLIP: 'local-clips:upsert-remote',
   /** 渲染进程 -> 主进程：隐藏主窗口 */
   WINDOW_HIDE: 'window:hide',
 } as const

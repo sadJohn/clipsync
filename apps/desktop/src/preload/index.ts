@@ -12,6 +12,8 @@ export interface ClipboardApi {
   deleteLocalClip: (id: string) => Promise<void>
   /** 标记本地记录已同步至云端 */
   markClipSynced: (id: string) => Promise<void>
+  /** 将云端 / 其他设备推送的记录写入本地 SQLite，返回落库后的记录 */
+  upsertRemoteClip: (record: LocalClipRecord) => Promise<LocalClipRecord>
   /** 隐藏悬浮窗 */
   hideWindow: () => Promise<void>
 }
@@ -34,6 +36,9 @@ const api: ClipboardApi = {
   deleteLocalClip: (id) => ipcRenderer.invoke(IpcChannels.DELETE_LOCAL_CLIP, id) as Promise<void>,
 
   markClipSynced: (id) => ipcRenderer.invoke(IpcChannels.MARK_CLIP_SYNCED, id) as Promise<void>,
+
+  upsertRemoteClip: (record) =>
+    ipcRenderer.invoke(IpcChannels.UPSERT_REMOTE_CLIP, record) as Promise<LocalClipRecord>,
 
   hideWindow: () => ipcRenderer.invoke(IpcChannels.WINDOW_HIDE) as Promise<void>,
 }

@@ -1,111 +1,169 @@
-import type { ClipType, LocalClipRecord } from '@clipsync/shared'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { ClipType } from '@clipsync/shared'
+import { Loader2, LogIn, LogOut, Search } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { AuthDialog } from '@/components/auth-dialog'
+import { ClipCard } from '@/components/clip-card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Toaster } from '@/components/ui/sonner'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useCloudSync } from '@/hooks/use-cloud-sync'
+import { getAuthToken } from '@/lib/auth-token'
+import { pushClip } from '@/lib/clip-sync'
+import { useAuthStore } from '@/store/auth-store'
+import { useClipStore } from '@/store/clip-store'
 
-const TYPE_LABELS: Record<ClipType, string> = {
-  TEXT: '文本',
-  CODE: '代码',
-  IMAGE: '图片',
-  LINK: '链接',
-}
-
-function formatTime(iso: string): string {
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) return ''
-  return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-}
+type Filter = 'all' | Extract<ClipType, 'TEXT' | 'CODE' | 'LINK'>
 
 export default function App() {
-  const [clips, setClips] = useState<LocalClipRecord[]>([])
+  const clips = useClipStore((state) => state.clips)
+  const loading = useClipStore((state) => state.loading)
+  const error = useClipStore((state) => state.error)
+  const load = useClipStore((state) => state.load)
+  const addClip = useClipStore((state) => state.addClip)
+
+  const authStatus = useAuthStore((state) => state.status)
+  const user = useAuthStore((state) => state.user)
+  const initAuth = useAuthStore((state) => state.init)
+  const signOut = useAuthStore((state) => state.signOut)
+
   const [keyword, setKeyword] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [filter, setFilter] = useState<Filter>('all')
+  const [authOpen, setAuthOpen] = useState(false)
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  useCloudSync(authStatus === 'authenticated' ? (user?.id ?? null) : null)
 
   useEffect(() => {
-    let active = true
+    void load()
+    void initAuth()
+  }, [load, initAuth])
 
-    window.api
-      .getLocalClips()
-      .then((list) => {
-        if (active) setClips(list)
-      })
-      .catch((err: unknown) => {
-        if (active) setError(err instanceof Error ? err.message : String(err))
-      })
-
+  useEffect(() => {
     const unsubscribe = window.api.onClipboardNew((clip) => {
-      setClips((prev) => [clip, ...prev.filter((item) => item.id !== clip.id)].slice(0, 200))
+      addClip(clip)
+      if (getAuthToken()) {
+        void pushClip(clip).catch((syncError: unknown) => {
+          console.warn('[sync] 新条目上传失败', syncError)
+        })
+      }
     })
 
     const onKeyDown = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') void window.api.hideWindow()
     }
+    const onFocus = (): void => {
+      searchRef.current?.focus()
+    }
+
     window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('focus', onFocus)
 
     return () => {
-      active = false
       unsubscribe()
       window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('focus', onFocus)
     }
-  }, [])
+  }, [addClip])
 
   const filteredClips = useMemo(() => {
     const query = keyword.trim().toLowerCase()
-    if (!query) return clips
-    return clips.filter((clip) => clip.content.toLowerCase().includes(query))
-  }, [clips, keyword])
-
-  const handleUse = useCallback(async (clip: LocalClipRecord) => {
-    await window.api.writeClipboard(clip.content)
-  }, [])
-
-  const handleDelete = useCallback(async (id: string) => {
-    await window.api.deleteLocalClip(id)
-    setClips((prev) => prev.filter((clip) => clip.id !== id))
-  }, [])
+    return clips.filter((clip) => {
+      const matchesType = filter === 'all' || clip.type === filter
+      const matchesKeyword =
+        !query ||
+        clip.content.toLowerCase().includes(query) ||
+        clip.deviceName.toLowerCase().includes(query)
+      return matchesType && matchesKeyword
+    })
+  }, [clips, filter, keyword])
 
   return (
-    <div className="app">
-      <header className="app__header">
+    <div className="flex h-screen flex-col">
+      <header className="drag-region flex items-start justify-between gap-3 px-4 pt-4 pb-2">
         <div>
-          <h1>ClipSync</h1>
-          <p>本地剪贴板历史 · {clips.length} 条</p>
+          <h1 className="text-[15px] font-semibold tracking-tight">ClipSync</h1>
+          <p className="mt-0.5 text-[10px] text-muted-foreground">
+            {authStatus === 'authenticated' && user
+              ? user.email
+              : '本地模式 · 登录后多设备同步'}
+          </p>
         </div>
-        <button className="app__hide" type="button" title="隐藏窗口 (Esc)" onClick={() => void window.api.hideWindow()}>
-          ×
-        </button>
+
+        <div className="no-drag flex items-center gap-1">
+          {authStatus === 'authenticated' ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground"
+              onClick={() => void signOut()}
+            >
+              <LogOut className="size-3.5" />
+              退出
+            </Button>
+          ) : (
+            <Button size="sm" onClick={() => setAuthOpen(true)}>
+              <LogIn className="size-3.5" />
+              登录
+            </Button>
+          )}
+        </div>
       </header>
 
-      <input
-        className="app__search"
-        type="text"
-        value={keyword}
-        placeholder="搜索剪贴板内容…"
-        autoFocus
-        onChange={(event) => setKeyword(event.target.value)}
-      />
+      <div className="px-4 pb-2">
+        <div className="relative">
+          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            ref={searchRef}
+            value={keyword}
+            autoFocus
+            placeholder="搜索剪贴板内容…"
+            className="h-8 pl-8 text-xs"
+            onChange={(event) => setKeyword(event.target.value)}
+          />
+        </div>
+      </div>
 
-      {error ? <p className="app__error">{error}</p> : null}
+      <div className="px-4 pb-2">
+        <Tabs value={filter} onValueChange={(value) => setFilter(value as Filter)}>
+          <TabsList className="w-full">
+            <TabsTrigger value="all">全部</TabsTrigger>
+            <TabsTrigger value="TEXT">文本</TabsTrigger>
+            <TabsTrigger value="CODE">代码</TabsTrigger>
+            <TabsTrigger value="LINK">链接</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
 
-      <ul className="clip-list">
-        {filteredClips.map((clip) => (
-          <li key={clip.id} className="clip">
-            <button className="clip__content" type="button" onClick={() => void handleUse(clip)}>
-              <span className="clip__meta">
-                <span className="clip__type">{TYPE_LABELS[clip.type]}</span>
-                <span>{formatTime(clip.createdAt)}</span>
-                <span>{clip.isSynced ? '已同步' : '仅本地'}</span>
-              </span>
-              <span className="clip__text">{clip.content}</span>
-            </button>
-            <button className="clip__delete" type="button" onClick={() => void handleDelete(clip.id)}>
-              删除
-            </button>
-          </li>
-        ))}
-      </ul>
+      {error ? <p className="px-4 pb-2 text-[11px] text-destructive">{error}</p> : null}
 
-      {filteredClips.length === 0 ? (
-        <p className="app__empty">复制一段文本即可自动记录；按 Option+V / Alt+V 呼出窗口。</p>
-      ) : null}
+      <ScrollArea className="min-h-0 flex-1 px-4">
+        {loading ? (
+          <div className="flex h-full items-center justify-center text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" />
+          </div>
+        ) : filteredClips.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center gap-1 px-6 text-center text-[11px] text-muted-foreground">
+            <p>{keyword ? '没有匹配的记录' : '复制一段文本，就会自动出现在这里'}</p>
+            <p>按 Option+V / Alt+V 随时呼出窗口</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2 pb-4">
+            {filteredClips.map((clip) => (
+              <ClipCard key={clip.id} clip={clip} />
+            ))}
+          </div>
+        )}
+      </ScrollArea>
+
+      <footer className="flex items-center justify-between border-t border-border/60 px-4 py-2 text-[10px] text-muted-foreground">
+        <span>Option+V 呼出</span>
+        <span>{clips.length} 条记录</span>
+      </footer>
+
+      <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
+      <Toaster />
     </div>
   )
 }
