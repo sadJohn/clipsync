@@ -1,6 +1,6 @@
 {
   "name": "@clipsync/desktop",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "ClipSync 桌面客户端（Electron + React + better-sqlite3）",
   "author": "ClipSync",
