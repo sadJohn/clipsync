@@ -1,0 +1,7 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# 允许执行原生依赖的安装脚本（pnpm 10+ 默认拦截）
+allowBuilds:
+  esbuild: true
