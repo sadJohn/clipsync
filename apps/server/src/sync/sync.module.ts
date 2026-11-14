@@ -5,6 +5,6 @@ import { SyncGateway } from './sync.gateway.js'
 
 @Module({
   imports: [ClipsModule, RealtimeModule],
-  providers: [SyncGateway],
+  providers: [SyncGateway]
 })
 export class SyncModule {}

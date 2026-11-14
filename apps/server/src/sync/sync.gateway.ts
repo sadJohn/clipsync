@@ -7,14 +7,14 @@ import {
   WebSocketServer,
   WsException,
   type OnGatewayConnection,
-  type OnGatewayInit,
+  type OnGatewayInit
 } from '@nestjs/websockets'
 import type { Server, Socket } from 'socket.io'
 import {
   SocketEvents,
   syncDeleteClipSchema,
   syncNewClipSchema,
-  syncPinClipSchema,
+  syncPinClipSchema
 } from '@clipsync/shared'
 import { auth } from '../auth/auth.js'
 import { trustedOrigins } from '../auth/trusted-origins.js'
@@ -25,8 +25,8 @@ import { userRoom } from './sync.rooms.js'
 @WebSocketGateway({
   cors: {
     origin: trustedOrigins,
-    credentials: true,
-  },
+    credentials: true
+  }
 })
 export class SyncGateway implements OnGatewayInit, OnGatewayConnection {
   private readonly logger = new Logger(SyncGateway.name)
@@ -36,7 +36,7 @@ export class SyncGateway implements OnGatewayInit, OnGatewayConnection {
 
   constructor(
     private readonly clips: ClipsService,
-    private readonly broadcaster: SyncBroadcaster,
+    private readonly broadcaster: SyncBroadcaster
   ) {}
 
   afterInit(server: Server): void {
@@ -54,7 +54,7 @@ export class SyncGateway implements OnGatewayInit, OnGatewayConnection {
       this.logger.log(`设备已连接 client=${client.id} user=${userId}`)
     } catch (error) {
       this.logger.warn(
-        `拒绝连接 client=${client.id}: ${error instanceof Error ? error.message : '未知错误'}`,
+        `拒绝连接 client=${client.id}: ${error instanceof Error ? error.message : '未知错误'}`
       )
       client.disconnect(true)
     }
@@ -65,7 +65,7 @@ export class SyncGateway implements OnGatewayInit, OnGatewayConnection {
     if (!token) throw new Error('缺少访问令牌')
 
     const session = await auth.api.getSession({
-      headers: new Headers({ authorization: `Bearer ${token}` }),
+      headers: new Headers({ authorization: `Bearer ${token}` })
     })
     if (!session) throw new Error('无效的访问令牌')
 
@@ -77,7 +77,7 @@ export class SyncGateway implements OnGatewayInit, OnGatewayConnection {
   @SubscribeMessage(SocketEvents.SYNC_NEW_CLIP)
   async handleNewClip(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: unknown,
+    @MessageBody() payload: unknown
   ): Promise<{ ok: true }> {
     const userId = await this.requireUserId(client)
     const parsed = syncNewClipSchema.safeParse(payload)
@@ -91,7 +91,7 @@ export class SyncGateway implements OnGatewayInit, OnGatewayConnection {
   @SubscribeMessage(SocketEvents.SYNC_DELETE_CLIP)
   async handleDeleteClip(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: unknown,
+    @MessageBody() payload: unknown
   ): Promise<{ ok: true }> {
     const userId = await this.requireUserId(client)
     const parsed = syncDeleteClipSchema.safeParse(payload)
@@ -105,19 +105,19 @@ export class SyncGateway implements OnGatewayInit, OnGatewayConnection {
   @SubscribeMessage(SocketEvents.SYNC_PIN_CLIP)
   async handlePinClip(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: unknown,
+    @MessageBody() payload: unknown
   ): Promise<{ ok: true }> {
     const userId = await this.requireUserId(client)
     const parsed = syncPinClipSchema.safeParse(payload)
     if (!parsed.success) throw new WsException('非法的置顶事件载荷')
 
     const clip = await this.clips.update(userId, parsed.data.id, {
-      isPinned: parsed.data.isPinned,
+      isPinned: parsed.data.isPinned
     })
     client.to(userRoom(userId)).emit(SocketEvents.SYNC_PIN_CLIP, {
       id: clip.id,
       isPinned: clip.isPinned,
-      updatedAt: clip.updatedAt,
+      updatedAt: clip.updatedAt
     })
     return { ok: true }
   }

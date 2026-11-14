@@ -11,7 +11,7 @@ import { trustedOrigins } from './auth/trusted-origins.js'
 async function bootstrap(): Promise<void> {
   // 关闭 Nest 默认的 bodyParser，Better Auth 需要自行读取原始请求体
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    bodyParser: false,
+    bodyParser: false
   })
 
   const expressApp = app.getHttpAdapter().getInstance()
@@ -19,7 +19,7 @@ async function bootstrap(): Promise<void> {
   // CORS 必须早于 Better Auth 挂载，否则预检请求会被其拦截
   app.enableCors({
     origin: trustedOrigins,
-    credentials: true,
+    credentials: true
   })
 
   // /api/auth/* 交由 Better Auth 官方 Express 适配器处理

@@ -6,6 +6,6 @@ import { SyncModule } from './sync/sync.module.js'
 
 @Module({
   imports: [PrismaModule, ClipsModule, SyncModule],
-  controllers: [AppController],
+  controllers: [AppController]
 })
 export class AppModule {}

@@ -14,7 +14,7 @@ function toRecord(row: LocalClipRow): LocalClipRecord {
     deviceName: row.deviceName,
     isPinned: row.isPinned,
     isSynced: row.isSynced,
-    createdAt: row.createdAt,
+    createdAt: row.createdAt
   }
 }
 
@@ -57,7 +57,7 @@ export const localClipService = {
           type: syncedRecord.type,
           deviceName: syncedRecord.deviceName,
           isPinned: syncedRecord.isPinned,
-          isSynced: true,
+          isSynced: true
         })
         .where(eq(localClips.id, record.id))
         .run()
@@ -87,9 +87,12 @@ export const localClipService = {
     if (/^(https?:\/\/|www\.)\S+$/i.test(trimmed)) {
       return 'LINK'
     }
-    if (trimmed.includes('\n') || /(?:=>|function\s|const\s|let\s|class\s|import\s|<\/?[a-z][^>]*>)/.test(trimmed)) {
+    if (
+      trimmed.includes('\n') ||
+      /(?:=>|function\s|const\s|let\s|class\s|import\s|<\/?[a-z][^>]*>)/.test(trimmed)
+    ) {
       return 'CODE'
     }
     return 'TEXT'
-  },
+  }
 }

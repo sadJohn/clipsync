@@ -2,7 +2,7 @@ import {
   SocketEvents,
   type LocalClipRecord,
   type SyncDeleteClipPayload,
-  type SyncNewClipPayload,
+  type SyncNewClipPayload
 } from '@clipsync/shared'
 import { io, type Socket } from 'socket.io-client'
 import { SERVER_URL } from './server'
@@ -18,7 +18,7 @@ interface SyncSocketHandlers {
 export function connectSyncSocket(token: string, handlers: SyncSocketHandlers): Socket {
   const socket = io(SERVER_URL, {
     auth: { token },
-    reconnection: true,
+    reconnection: true
   })
 
   socket.on(SocketEvents.SYNC_NEW_CLIP, (payload: SyncNewClipPayload) => {
@@ -29,7 +29,7 @@ export function connectSyncSocket(token: string, handlers: SyncSocketHandlers): 
       deviceName: payload.clip.deviceName,
       isPinned: payload.clip.isPinned,
       isSynced: true,
-      createdAt: payload.clip.createdAt,
+      createdAt: payload.clip.createdAt
     })
   })
 

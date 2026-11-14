@@ -32,8 +32,8 @@ export function createMainWindow(): BrowserWindow {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
       contextIsolation: true,
-      nodeIntegration: false,
-    },
+      nodeIntegration: false
+    }
   })
 
   win.setAlwaysOnTop(true, 'floating')
@@ -78,7 +78,7 @@ function positionWindow(win: BrowserWindow): void {
 
   win.setPosition(
     Math.round(workArea.x + (workArea.width - width) / 2),
-    Math.round(workArea.y + Math.max(24, (workArea.height - height) / 3)),
+    Math.round(workArea.y + Math.max(24, (workArea.height - height) / 3))
   )
 }
 

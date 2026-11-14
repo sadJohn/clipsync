@@ -9,6 +9,6 @@ export function toClipItemDto(clip: ClipItem): ClipItemDto {
     deviceName: clip.deviceName,
     isPinned: clip.isPinned,
     createdAt: clip.createdAt.toISOString(),
-    updatedAt: clip.updatedAt.toISOString(),
+    updatedAt: clip.updatedAt.toISOString()
   }
 }

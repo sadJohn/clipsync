@@ -7,7 +7,7 @@ export class AppController {
     return {
       status: 'ok',
       service: 'clipsync-server',
-      time: new Date().toISOString(),
+      time: new Date().toISOString()
     }
   }
 }

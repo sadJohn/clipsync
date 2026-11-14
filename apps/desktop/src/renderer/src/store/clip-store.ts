@@ -37,7 +37,7 @@ export const useClipStore = create<ClipState>((set, get) => ({
     } catch (error) {
       set({
         loading: false,
-        error: error instanceof Error ? error.message : String(error),
+        error: error instanceof Error ? error.message : String(error)
       })
     }
   },
@@ -69,7 +69,7 @@ export const useClipStore = create<ClipState>((set, get) => ({
 
   markSynced: (id) => {
     set((state) => ({
-      clips: state.clips.map((item) => (item.id === id ? { ...item, isSynced: true } : item)),
+      clips: state.clips.map((item) => (item.id === id ? { ...item, isSynced: true } : item))
     }))
-  },
+  }
 }))

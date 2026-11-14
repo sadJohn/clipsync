@@ -4,6 +4,6 @@ import { PrismaService, prismaService } from './prisma.service.js'
 @Global()
 @Module({
   providers: [{ provide: PrismaService, useValue: prismaService }],
-  exports: [PrismaService],
+  exports: [PrismaService]
 })
 export class PrismaModule {}

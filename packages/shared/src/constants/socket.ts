@@ -7,7 +7,7 @@ export const SocketEvents = {
   /** 有剪贴板条目被删除 */
   SYNC_DELETE_CLIP: 'sync:delete-clip',
   /** 剪贴板条目的置顶状态发生变化 */
-  SYNC_PIN_CLIP: 'sync:pin-clip',
+  SYNC_PIN_CLIP: 'sync:pin-clip'
 } as const
 
 export type SocketEvent = (typeof SocketEvents)[keyof typeof SocketEvents]

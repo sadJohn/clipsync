@@ -12,13 +12,13 @@ export const authClient = createAuthClient({
   fetchOptions: {
     auth: {
       type: 'Bearer',
-      token: () => getAuthToken() ?? undefined,
+      token: () => getAuthToken() ?? undefined
     },
     onSuccess: (context) => {
       const token = context.response.headers.get('set-auth-token')
       if (token) {
         setAuthToken(token)
       }
-    },
-  },
+    }
+  }
 })

@@ -10,7 +10,7 @@ export function toClipDto(record: LocalClipRecord): ClipItemDto {
     deviceName: record.deviceName,
     isPinned: record.isPinned,
     createdAt: record.createdAt,
-    updatedAt: record.createdAt,
+    updatedAt: record.createdAt
   }
 }
 

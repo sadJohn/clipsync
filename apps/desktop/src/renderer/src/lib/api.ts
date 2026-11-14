@@ -5,7 +5,7 @@ import { SERVER_URL } from './server'
 export class ApiError extends Error {
   constructor(
     message: string,
-    readonly status: number,
+    readonly status: number
   ) {
     super(message)
     this.name = 'ApiError'
@@ -23,8 +23,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
-      ...init?.headers,
-    },
+      ...init?.headers
+    }
   })
 
   if (!response.ok) {
@@ -47,10 +47,10 @@ export const clipsApi = {
   create: (clip: ClipItemDto) =>
     request<ClipItemDto>('/api/clips', {
       method: 'POST',
-      body: JSON.stringify(clip),
+      body: JSON.stringify(clip)
     }),
   remove: (id: string) =>
     request<{ id: string }>(`/api/clips/${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-    }),
+      method: 'DELETE'
+    })
 }

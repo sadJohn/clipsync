@@ -36,7 +36,7 @@ export function useCloudSync(userId: string | null): void {
           .catch((error: unknown) => {
             console.warn('[sync] 远端删除同步失败', error)
           })
-      },
+      }
     })
 
     void syncWithCloud().catch((error: unknown) => {

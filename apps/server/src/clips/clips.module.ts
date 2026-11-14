@@ -7,6 +7,6 @@ import { ClipsService } from './clips.service.js'
   imports: [RealtimeModule],
   controllers: [ClipsController],
   providers: [ClipsService],
-  exports: [ClipsService],
+  exports: [ClipsService]
 })
 export class ClipsModule {}

@@ -19,9 +19,9 @@ protocol.registerSchemesAsPrivileged([
       standard: true,
       secure: true,
       supportFetchAPI: true,
-      corsEnabled: true,
-    },
-  },
+      corsEnabled: true
+    }
+  }
 ])
 
 function registerAppProtocol(): void {
@@ -56,7 +56,7 @@ if (!hasSingleInstanceLock) {
     createMainWindow()
 
     registerIpcHandlers({
-      onClipboardWrite: (content) => watcher.markExternalWrite(content),
+      onClipboardWrite: (content) => watcher.markExternalWrite(content)
     })
 
     watcher.onNewClip((clip) => {
@@ -72,7 +72,7 @@ if (!hasSingleInstanceLock) {
       onQuit: () => {
         markQuitting()
         app.quit()
-      },
+      }
     })
 
     registerGlobalShortcuts(toggleWindow)

@@ -29,9 +29,11 @@ const api: ClipboardApi = {
     }
   },
 
-  getLocalClips: () => ipcRenderer.invoke(IpcChannels.GET_LOCAL_CLIPS) as Promise<LocalClipRecord[]>,
+  getLocalClips: () =>
+    ipcRenderer.invoke(IpcChannels.GET_LOCAL_CLIPS) as Promise<LocalClipRecord[]>,
 
-  writeClipboard: (content) => ipcRenderer.invoke(IpcChannels.CLIPBOARD_WRITE, content) as Promise<void>,
+  writeClipboard: (content) =>
+    ipcRenderer.invoke(IpcChannels.CLIPBOARD_WRITE, content) as Promise<void>,
 
   deleteLocalClip: (id) => ipcRenderer.invoke(IpcChannels.DELETE_LOCAL_CLIP, id) as Promise<void>,
 
@@ -40,7 +42,7 @@ const api: ClipboardApi = {
   upsertRemoteClip: (record) =>
     ipcRenderer.invoke(IpcChannels.UPSERT_REMOTE_CLIP, record) as Promise<LocalClipRecord>,
 
-  hideWindow: () => ipcRenderer.invoke(IpcChannels.WINDOW_HIDE) as Promise<void>,
+  hideWindow: () => ipcRenderer.invoke(IpcChannels.WINDOW_HIDE) as Promise<void>
 }
 
 contextBridge.exposeInMainWorld('api', api)

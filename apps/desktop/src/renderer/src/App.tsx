@@ -85,9 +85,7 @@ export default function App() {
         <div>
           <h1 className="text-[15px] font-semibold tracking-tight">ClipSync</h1>
           <p className="mt-0.5 text-[10px] text-muted-foreground">
-            {authStatus === 'authenticated' && user
-              ? user.email
-              : '本地模式 · 登录后多设备同步'}
+            {authStatus === 'authenticated' && user ? user.email : '本地模式 · 登录后多设备同步'}
           </p>
         </div>
 

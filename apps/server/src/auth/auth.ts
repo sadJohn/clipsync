@@ -19,8 +19,8 @@ export const auth = betterAuth({
   database: prismaAdapter(prismaService, { provider: 'postgresql' }),
   emailAndPassword: {
     enabled: true,
-    autoSignIn: true,
+    autoSignIn: true
   },
   trustedOrigins,
-  plugins: [bearer()],
+  plugins: [bearer()]
 })

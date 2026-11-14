@@ -3,6 +3,6 @@ import { SyncBroadcaster } from './sync.broadcaster.js'
 
 @Module({
   providers: [SyncBroadcaster],
-  exports: [SyncBroadcaster],
+  exports: [SyncBroadcaster]
 })
 export class RealtimeModule {}

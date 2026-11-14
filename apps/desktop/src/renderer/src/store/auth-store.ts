@@ -77,5 +77,5 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
     clearAuthToken()
     set({ status: 'anonymous', user: null })
-  },
+  }
 }))

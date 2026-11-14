@@ -8,7 +8,7 @@ const TYPE_LABELS: Record<ClipType, string> = {
   TEXT: '文本',
   CODE: '代码',
   IMAGE: '图片',
-  LINK: '链接',
+  LINK: '链接'
 }
 
 function formatTime(iso: string): string {
@@ -18,7 +18,7 @@ function formatTime(iso: string): string {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
-    minute: '2-digit',
+    minute: '2-digit'
   })
 }
 
@@ -46,7 +46,7 @@ export function ClipCard({ clip }: ClipCardProps) {
       }}
       className="group relative cursor-pointer rounded-xl border border-border/70 bg-card/70 p-3 transition-colors hover:border-primary/40 hover:bg-card focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 focus-visible:outline-none"
     >
-      <p className="line-clamp-3 pr-6 text-[13px] leading-relaxed break-words whitespace-pre-wrap">
+      <p className="line-clamp-3 pr-6 text-[13px] leading-relaxed wrap-break-words whitespace-pre-wrap">
         {clip.content}
       </p>
 
@@ -54,7 +54,7 @@ export function ClipCard({ clip }: ClipCardProps) {
         <Badge variant="secondary" className="bg-primary/10 text-primary">
           {TYPE_LABELS[clip.type]}
         </Badge>
-        <span className="max-w-[110px] truncate">{clip.deviceName}</span>
+        <span className="max-w-27.5 truncate">{clip.deviceName}</span>
         <span>·</span>
         <span>{formatTime(clip.createdAt)}</span>
         <span className="ml-auto flex items-center gap-1">

@@ -70,7 +70,7 @@ export class ClipboardWatcher {
         deviceName: localClipService.getDeviceName(),
         isPinned: false,
         isSynced: false,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
       }
 
       localClipService.insert(record)

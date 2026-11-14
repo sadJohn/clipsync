@@ -4,7 +4,7 @@ import type {
   ClipType,
   CreateClipParsed,
   ListClipsQueryParsed,
-  UpdateClipParsed,
+  UpdateClipParsed
 } from '@clipsync/shared'
 import { PrismaService } from '../prisma/prisma.service.js'
 import { toClipItemDto } from './clip.mapper.js'
@@ -27,10 +27,10 @@ export class ClipsService {
     const clips = await this.prisma.clipItem.findMany({
       where: {
         userId,
-        ...(query.since ? { updatedAt: { gt: new Date(query.since) } } : {}),
+        ...(query.since ? { updatedAt: { gt: new Date(query.since) } } : {})
       },
       orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
-      take: query.limit,
+      take: query.limit
     })
     return clips.map(toClipItemDto)
   }
@@ -43,7 +43,7 @@ export class ClipsService {
       deviceName: input.deviceName,
       isPinned: input.isPinned,
       createdAt: input.createdAt,
-      updatedAt: input.updatedAt ?? input.createdAt,
+      updatedAt: input.updatedAt ?? input.createdAt
     })
   }
 
@@ -64,8 +64,8 @@ export class ClipsService {
       where: { id },
       data: {
         ...(input.content !== undefined ? { content: input.content } : {}),
-        ...(input.isPinned !== undefined ? { isPinned: input.isPinned } : {}),
-      },
+        ...(input.isPinned !== undefined ? { isPinned: input.isPinned } : {})
+      }
     })
     return toClipItemDto(updated)
   }
@@ -95,8 +95,8 @@ export class ClipsService {
         deviceName: clip.deviceName,
         isPinned: clip.isPinned,
         createdAt: new Date(clip.createdAt),
-        updatedAt: new Date(clip.updatedAt),
-      },
+        updatedAt: new Date(clip.updatedAt)
+      }
     })
     return toClipItemDto(created)
   }

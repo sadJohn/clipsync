@@ -9,7 +9,7 @@ import {
   Post,
   Query,
   Req,
-  UseGuards,
+  UseGuards
 } from '@nestjs/common'
 import {
   SocketEvents,
@@ -18,7 +18,7 @@ import {
   updateClipSchema,
   type CreateClipParsed,
   type ListClipsQueryParsed,
-  type UpdateClipParsed,
+  type UpdateClipParsed
 } from '@clipsync/shared'
 import { AuthGuard, type AuthenticatedRequest } from '../auth/auth.guard.js'
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js'
@@ -30,13 +30,13 @@ import { ClipsService } from './clips.service.js'
 export class ClipsController {
   constructor(
     private readonly clips: ClipsService,
-    private readonly broadcaster: SyncBroadcaster,
+    private readonly broadcaster: SyncBroadcaster
   ) {}
 
   @Get()
   list(
     @Req() request: AuthenticatedRequest,
-    @Query(new ZodValidationPipe(listClipsQuerySchema)) query: ListClipsQueryParsed,
+    @Query(new ZodValidationPipe(listClipsQuerySchema)) query: ListClipsQueryParsed
   ) {
     return this.clips.list(request.user.id, query)
   }
@@ -44,7 +44,7 @@ export class ClipsController {
   @Post()
   async create(
     @Req() request: AuthenticatedRequest,
-    @Body(new ZodValidationPipe(createClipSchema)) body: CreateClipParsed,
+    @Body(new ZodValidationPipe(createClipSchema)) body: CreateClipParsed
   ) {
     const clip = await this.clips.create(request.user.id, body)
     this.broadcaster.emitToUser(request.user.id, SocketEvents.SYNC_NEW_CLIP, { clip })
@@ -55,22 +55,19 @@ export class ClipsController {
   async update(
     @Req() request: AuthenticatedRequest,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(updateClipSchema)) body: UpdateClipParsed,
+    @Body(new ZodValidationPipe(updateClipSchema)) body: UpdateClipParsed
   ) {
     const clip = await this.clips.update(request.user.id, id, body)
     this.broadcaster.emitToUser(request.user.id, SocketEvents.SYNC_PIN_CLIP, {
       id: clip.id,
       isPinned: clip.isPinned,
-      updatedAt: clip.updatedAt,
+      updatedAt: clip.updatedAt
     })
     return clip
   }
 
   @Delete(':id')
-  async remove(
-    @Req() request: AuthenticatedRequest,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
+  async remove(@Req() request: AuthenticatedRequest, @Param('id', ParseUUIDPipe) id: string) {
     await this.clips.remove(request.user.id, id)
     this.broadcaster.emitToUser(request.user.id, SocketEvents.SYNC_DELETE_CLIP, { id })
     return { id }

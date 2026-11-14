@@ -11,7 +11,7 @@ export const clipItemSchema = z.object({
   deviceName: z.string().min(1).max(64),
   isPinned: z.boolean(),
   createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  updatedAt: z.string().datetime()
 })
 
 /** 本地 SQLite 记录校验（isPinned / isSynced 为布尔语义） */
@@ -22,7 +22,7 @@ export const localClipRecordSchema = z.object({
   deviceName: z.string().min(1).max(64),
   isPinned: z.boolean(),
   isSynced: z.boolean(),
-  createdAt: z.string().datetime(),
+  createdAt: z.string().datetime()
 })
 
 /** 桌面端上传新条目时的入参 */
@@ -33,23 +33,23 @@ export const createClipSchema = z.object({
   deviceName: z.string().min(1).max(64),
   isPinned: z.boolean().default(false),
   createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional()
 })
 
 /** 更新条目（目前仅支持修改内容与置顶状态） */
 export const updateClipSchema = z
   .object({
     content: z.string().min(1).optional(),
-    isPinned: z.boolean().optional(),
+    isPinned: z.boolean().optional()
   })
   .refine((value) => value.content !== undefined || value.isPinned !== undefined, {
-    message: '至少需要提供 content 或 isPinned 字段',
+    message: '至少需要提供 content 或 isPinned 字段'
   })
 
 /** 增量拉取查询参数 */
 export const listClipsQuerySchema = z.object({
   since: z.string().datetime().optional(),
-  limit: z.coerce.number().int().min(1).max(200).default(50),
+  limit: z.coerce.number().int().min(1).max(200).default(50)
 })
 
 export type ClipItemInput = z.input<typeof clipItemSchema>

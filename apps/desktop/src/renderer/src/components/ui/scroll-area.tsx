@@ -38,7 +38,7 @@ function ScrollBar({
         'flex touch-none select-none p-px transition-colors',
         orientation === 'vertical' && 'h-full w-2 border-l border-l-transparent',
         orientation === 'horizontal' && 'h-2 flex-col border-t border-t-transparent',
-        className,
+        className
       )}
       {...props}
     >

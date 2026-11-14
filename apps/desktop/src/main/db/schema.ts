@@ -12,7 +12,7 @@ export const localClips = sqliteTable('local_clips', {
   deviceName: text('device_name').notNull(),
   isPinned: integer('is_pinned', { mode: 'boolean' }).notNull().default(false),
   isSynced: integer('is_synced', { mode: 'boolean' }).notNull().default(false),
-  createdAt: text('created_at').notNull(),
+  createdAt: text('created_at').notNull()
 })
 
 export type LocalClipRow = typeof localClips.$inferSelect

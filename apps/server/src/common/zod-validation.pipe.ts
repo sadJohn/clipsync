@@ -13,7 +13,7 @@ export class ZodValidationPipe<T> implements PipeTransform<unknown, T> {
     if (!result.success) {
       throw new BadRequestException({
         message: '请求参数校验失败',
-        issues: result.error.flatten(),
+        issues: result.error.flatten()
       })
     }
     return result.data
