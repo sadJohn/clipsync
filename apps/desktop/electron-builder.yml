@@ -1,0 +1,46 @@
+appId: com.clipsync.app
+productName: ClipSync
+copyright: Copyright © 2026 ClipSync
+
+directories:
+  output: release
+  buildResources: resources
+
+files:
+  - out/**/*
+  - resources/**/*
+  - package.json
+
+asar: true
+
+# better-sqlite3 是原生模块，必须解包到 asar 外才能被主进程加载
+asarUnpack:
+  - "**/node_modules/better-sqlite3/**"
+
+npmRebuild: true
+
+mac:
+  category: public.app-category.productivity
+  icon: resources/icon-1024.png
+  target:
+    - target: dmg
+    - target: zip
+
+dmg:
+  title: ${productName}
+
+win:
+  icon: resources/icon-1024.png
+  target:
+    - target: nsis
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+
+linux:
+  icon: resources/icon-1024.png
+  category: Utility
+  target:
+    - AppImage

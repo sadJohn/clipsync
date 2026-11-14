@@ -28,6 +28,7 @@ pnpm --filter @clipsync/server prisma:push    # 同步 schema 到云端 PostgreS
 - 桌面端设计为托盘常驻：窗口启动不自动展示，`Alt+V`（macOS `Option+V`）或托盘图标呼出，失焦 / Esc 隐藏，关闭只隐藏不退出，macOS 隐藏 Dock 图标。不要改回普通窗口。
 - 样式使用 Tailwind CSS v4（CSS-first，无 `tailwind.config.js`）+ 手写 shadcn/ui 组件（`src/renderer/src/components/ui`），路径别名为 `@/*`。不要运行 `shadcn` CLI 重新初始化，以免覆盖主题与别名。
 - `apps/server/.env` 含真实密钥，已被 gitignore，禁止输出或提交。
+- 桌面端 `dependencies` 只保留 `better-sqlite3`：其余依赖均被 Vite 打进产物，放 `devDependencies` 可避免 electron-builder 重复打包。新增原生模块时，必须同时加入 [electron-builder.yml](apps/desktop/electron-builder.yml) 的 `asarUnpack`。打包产物在 `apps/desktop/release/`（已 gitignore），`pack:dir` 用于快速验证，`dist:mac` / `dist:win` 生成安装包且需在对应平台执行。
 
 ## 数据与同步链路
 

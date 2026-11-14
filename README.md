@@ -139,6 +139,29 @@ pnpm --filter @clipsync/server start
 
 构建后的桌面端通过 `app://clipsync` 协议加载页面，后端已将该来源加入 CORS 白名单。
 
+### 生成安装包
+
+```bash
+# 仅生成未压缩的 .app（本地验证，最快）
+pnpm --filter @clipsync/desktop pack:dir
+
+# 生成对应平台安装包，产物在 apps/desktop/release/
+pnpm --filter @clipsync/desktop dist:mac
+pnpm --filter @clipsync/desktop dist:win
+pnpm --filter @clipsync/desktop dist:linux
+```
+
+打包前注意：
+
+- `apps/desktop/.env` 中的 `VITE_SERVER_URL` 会被打进产物，分享给别人前需指向云端后端
+- `better-sqlite3` 是原生模块，需在目标平台上构建（Windows 包在 Windows 上打），并在 `electron-builder.yml` 中保持 `asarUnpack`
+- 未签名 / 未公证的 macOS 包在别人机器上会被 Gatekeeper 拦截，需右键「打开」；正式分发需 Apple Developer ID + notarize
+- 应用图标为 `resources/icon-1024.png`，托盘图标为 `resources/icon.png`（含 `@2x`）
+
+## 部署后端
+
+后端是长驻服务并依赖 Socket.IO，推荐部署到 Render Web Service（不建议 Vercel Serverless）。完整步骤见 [docs/deploy-render.md](docs/deploy-render.md)。
+
 ## 验证清单
 
 ```bash
@@ -161,15 +184,15 @@ sqlite3 "$HOME/Library/Application Support/ClipSync/clipsync-local.db" \
 
 ## 常用命令
 
-| 命令 | 说明 |
-| --- | --- |
-| `pnpm dev` | 同时启动 shared watch、后端与桌面端 |
-| `pnpm build` | 构建全部工作区 |
-| `pnpm typecheck` | 全部工作区类型检查 |
-| `pnpm --filter @clipsync/shared build` | 单独构建共享包 |
-| `pnpm --filter @clipsync/server prisma:push` | 同步 Prisma schema 到云端数据库 |
-| `pnpm --filter @clipsync/desktop dev` | 以开发模式启动桌面端 |
-| `pnpm --filter @clipsync/desktop start` | 启动已构建的桌面端 |
+| 命令                                         | 说明                                |
+| -------------------------------------------- | ----------------------------------- |
+| `pnpm dev`                                   | 同时启动 shared watch、后端与桌面端 |
+| `pnpm build`                                 | 构建全部工作区                      |
+| `pnpm typecheck`                             | 全部工作区类型检查                  |
+| `pnpm --filter @clipsync/shared build`       | 单独构建共享包                      |
+| `pnpm --filter @clipsync/server prisma:push` | 同步 Prisma schema 到云端数据库     |
+| `pnpm --filter @clipsync/desktop dev`        | 以开发模式启动桌面端                |
+| `pnpm --filter @clipsync/desktop start`      | 启动已构建的桌面端                  |
 
 ## 常见问题
 
