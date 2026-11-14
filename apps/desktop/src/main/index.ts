@@ -7,7 +7,14 @@ import { registerIpcHandlers } from './ipc'
 import { ClipboardWatcher } from './services/clipboard-watcher'
 import { registerGlobalShortcuts, unregisterGlobalShortcuts } from './services/shortcut-manager'
 import { createTrayManager } from './services/tray-manager'
-import { createMainWindow, getMainWindow, markQuitting, showWindow, toggleWindow } from './window'
+import {
+  createMainWindow,
+  getMainWindow,
+  markQuitting,
+  showWindow,
+  toggleWindow,
+  toggleWindowFromTray
+} from './window'
 
 app.setName('ClipSync')
 
@@ -68,6 +75,7 @@ if (!hasSingleInstanceLock) {
     void watcher.start()
     createTrayManager({
       iconPath: join(__dirname, '../../resources/icon.png'),
+      onTrayClick: toggleWindowFromTray,
       onToggle: toggleWindow,
       onQuit: () => {
         markQuitting()

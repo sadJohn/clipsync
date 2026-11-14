@@ -6,6 +6,8 @@ const WINDOW_HEIGHT = 560
 
 let mainWindow: BrowserWindow | null = null
 let quitting = false
+/** 最近一次因失焦隐藏的时间戳，用于抵消托盘点击时的「失焦先隐藏、点击又显示」竞态 */
+let lastHiddenAt = 0
 
 /**
  * 创建无边框悬浮窗（常驻置顶、不占任务栏），首次调用后复用同一实例。
@@ -42,7 +44,7 @@ export function createMainWindow(): BrowserWindow {
   // 失焦自动收起（开发者工具打开时除外，方便调试）
   win.on('blur', () => {
     if (!win.isDestroyed() && !win.webContents.isDevToolsOpened()) {
-      win.hide()
+      hideWindow()
     }
   })
 
@@ -90,7 +92,11 @@ export function showWindow(): void {
 }
 
 export function hideWindow(): void {
-  mainWindow?.hide()
+  if (!mainWindow || mainWindow.isDestroyed() || !mainWindow.isVisible()) {
+    return
+  }
+  lastHiddenAt = Date.now()
+  mainWindow.hide()
 }
 
 export function toggleWindow(): void {
@@ -99,6 +105,18 @@ export function toggleWindow(): void {
   } else {
     showWindow()
   }
+}
+
+/** 托盘左键专用：点击会让窗口先失焦隐藏，紧接着的 click 需要被忽略 */
+export function toggleWindowFromTray(): void {
+  if (mainWindow && mainWindow.isVisible()) {
+    hideWindow()
+    return
+  }
+  if (Date.now() - lastHiddenAt < 300) {
+    return
+  }
+  showWindow()
 }
 
 export function getMainWindow(): BrowserWindow | null {

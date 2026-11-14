@@ -2,6 +2,9 @@ import { Menu, Tray, nativeImage } from 'electron'
 
 interface TrayManagerOptions {
   iconPath: string
+  /** 左键点击托盘：需要抵消「失焦先隐藏、点击又显示」的竞态 */
+  onTrayClick: () => void
+  /** 右键菜单里的显示 / 隐藏 */
   onToggle: () => void
   onQuit: () => void
 }
@@ -24,7 +27,7 @@ export function createTrayManager(options: TrayManagerOptions): Tray {
     { label: '退出 ClipSync', click: options.onQuit }
   ])
 
-  tray.on('click', options.onToggle)
+  tray.on('click', options.onTrayClick)
   tray.on('right-click', () => tray.popUpContextMenu(menu))
 
   return tray
