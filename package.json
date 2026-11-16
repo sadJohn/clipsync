@@ -14,10 +14,18 @@
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "format": "prettier --write .",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "clean": "turbo run clean && rm -rf node_modules",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "apps/**/*.{ts,tsx}": "eslint --fix --flag v10_config_lookup_from_file",
+    "packages/shared/**/*.{ts,tsx}": "eslint --fix --flag v10_config_lookup_from_file",
+    "*.{ts,tsx,js,mjs,cjs,json,css,md,yml,yaml,html}": "prettier --write"
   },
   "devDependencies": {
     "eslint": "^9.39.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
     "prettier": "^3.10.1",
     "turbo": "^2.3.3",
     "typescript": "^5.7.2"
