@@ -1,7 +1,7 @@
 import { IpcChannels, type LocalClipRecord } from '@clipsync/shared'
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 
-export interface ClipboardApi {
+export interface DesktopApi {
   /** 订阅主进程监听到的新剪贴板内容，返回取消订阅函数 */
   onClipboardNew: (callback: (clip: LocalClipRecord) => void) => () => void
   /** 读取本地 SQLite 中的剪贴板历史 */
@@ -16,9 +16,15 @@ export interface ClipboardApi {
   upsertRemoteClip: (record: LocalClipRecord) => Promise<LocalClipRecord>
   /** 隐藏悬浮窗 */
   hideWindow: () => Promise<void>
+  /** 读取主进程加密保存的认证 Token */
+  getAuthToken: () => Promise<string | null>
+  /** 交由主进程加密保存认证 Token */
+  setAuthToken: (token: string) => Promise<void>
+  /** 清除主进程保存的认证 Token */
+  clearAuthToken: () => Promise<void>
 }
 
-const api: ClipboardApi = {
+const api: DesktopApi = {
   onClipboardNew: (callback) => {
     const listener = (_event: IpcRendererEvent, clip: LocalClipRecord): void => {
       callback(clip)
@@ -42,7 +48,13 @@ const api: ClipboardApi = {
   upsertRemoteClip: (record) =>
     ipcRenderer.invoke(IpcChannels.UPSERT_REMOTE_CLIP, record) as Promise<LocalClipRecord>,
 
-  hideWindow: () => ipcRenderer.invoke(IpcChannels.WINDOW_HIDE) as Promise<void>
+  hideWindow: () => ipcRenderer.invoke(IpcChannels.WINDOW_HIDE) as Promise<void>,
+
+  getAuthToken: () => ipcRenderer.invoke(IpcChannels.AUTH_TOKEN_GET) as Promise<string | null>,
+
+  setAuthToken: (token) => ipcRenderer.invoke(IpcChannels.AUTH_TOKEN_SET, token) as Promise<void>,
+
+  clearAuthToken: () => ipcRenderer.invoke(IpcChannels.AUTH_TOKEN_CLEAR) as Promise<void>
 }
 
 contextBridge.exposeInMainWorld('api', api)

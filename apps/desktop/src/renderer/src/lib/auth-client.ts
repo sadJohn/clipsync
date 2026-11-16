@@ -17,7 +17,10 @@ export const authClient = createAuthClient({
     onSuccess: (context) => {
       const token = context.response.headers.get('set-auth-token')
       if (token) {
-        setAuthToken(token)
+        // 内存缓存同步更新，落盘由主进程异步完成，不阻塞后续请求
+        void setAuthToken(token).catch((error: unknown) => {
+          console.warn('[auth] Token 保存失败', error)
+        })
       }
     }
   }

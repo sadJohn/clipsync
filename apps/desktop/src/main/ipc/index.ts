@@ -1,5 +1,6 @@
 import { clipboard, ipcMain } from 'electron'
 import { IpcChannels, localClipRecordSchema } from '@clipsync/shared'
+import * as authTokenStore from '../services/auth-token-store'
 import { localClipService } from '../services/local-clip-service'
 import { hideWindow } from '../window'
 
@@ -49,5 +50,18 @@ export function registerIpcHandlers(options: IpcHandlerOptions): void {
 
   ipcMain.handle(IpcChannels.WINDOW_HIDE, () => {
     hideWindow()
+  })
+
+  ipcMain.handle(IpcChannels.AUTH_TOKEN_GET, () => authTokenStore.getToken())
+
+  ipcMain.handle(IpcChannels.AUTH_TOKEN_SET, (_event, token: unknown) => {
+    if (typeof token !== 'string' || token.length === 0) {
+      throw new Error('token 必须是非空字符串')
+    }
+    authTokenStore.setToken(token)
+  })
+
+  ipcMain.handle(IpcChannels.AUTH_TOKEN_CLEAR, () => {
+    authTokenStore.clearToken()
   })
 }

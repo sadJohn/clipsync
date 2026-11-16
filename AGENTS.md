@@ -24,7 +24,7 @@ pnpm --filter @clipsync/server prisma:push    # 同步 schema 到云端 PostgreS
 - 渲染进程 Origin：开发态为 `http://localhost:5173`，生产态为自定义协议 `app://clipsync`（`src/main/index.ts` 中注册并加载）。服务端 `trustedOrigins` / CORS / Socket.IO 共用 [trusted-origins.ts](apps/server/src/auth/trusted-origins.ts) 白名单，新增来源要同步修改。
 - 服务端关闭了 Nest 全局 `bodyParser`，Better Auth 需要自行读取原始请求体，不要改回默认值。
 - 服务端是 ESM：`package.json` 为 `type: module`，相对导入必须带 `.js` 后缀。
-- 认证使用 Better Auth 的 bearer 插件。桌面端 Token 存在 `localStorage['clipsync:auth-token']`，由 [auth-client.ts](apps/desktop/src/renderer/src/lib/auth-client.ts) 从响应头 `set-auth-token` 捕获，并自动注入后续请求。不要改成 cookie 方案。
+- 认证使用 Better Auth 的 bearer 插件。桌面端 Token 由 [auth-client.ts](apps/desktop/src/renderer/src/lib/auth-client.ts) 从响应头 `set-auth-token` 捕获，经 IPC 交给主进程用 `safeStorage` 加密后写入 `userData/auth-token.bin`（[auth-token-store.ts](apps/desktop/src/main/services/auth-token-store.ts)）；渲染进程只在内存中缓存（[auth-token.ts](apps/desktop/src/renderer/src/lib/auth-token.ts)），严禁明文写入 localStorage。不要改成 cookie 方案。
 - 本地 SQLite 文件为 `app.getPath('userData')/clipsync-local.db`，表 `local_clips` 由 [schema.ts](apps/desktop/src/main/db/schema.ts) 定义；所有数据库访问都在主进程。
 - 新增 IPC 通道时需同时改四处：`packages/shared/src/constants/ipc.ts` 的 `IpcChannels`、`src/main/ipc/index.ts` 的 handler、`src/preload/index.ts` 的 `window.api`、renderer 中的调用与类型。
 - 桌面端设计为托盘常驻：窗口启动不自动展示，`Alt+V`（macOS `Option+V`）或托盘图标呼出，失焦 / Esc 隐藏，关闭只隐藏不退出，macOS 隐藏 Dock 图标。不要改回普通窗口。

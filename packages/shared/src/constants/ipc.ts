@@ -15,7 +15,13 @@ export const IpcChannels = {
   /** 渲染进程 -> 主进程：将云端 / 其他设备推送的记录写入本地 SQLite */
   UPSERT_REMOTE_CLIP: 'local-clips:upsert-remote',
   /** 渲染进程 -> 主进程：隐藏主窗口 */
-  WINDOW_HIDE: 'window:hide'
+  WINDOW_HIDE: 'window:hide',
+  /** 渲染进程 -> 主进程：读取加密保存的认证 Token */
+  AUTH_TOKEN_GET: 'auth-token:get',
+  /** 渲染进程 -> 主进程：加密保存认证 Token */
+  AUTH_TOKEN_SET: 'auth-token:set',
+  /** 渲染进程 -> 主进程：清除已保存的认证 Token */
+  AUTH_TOKEN_CLEAR: 'auth-token:clear'
 } as const
 
 export type IpcChannel = (typeof IpcChannels)[keyof typeof IpcChannels]
