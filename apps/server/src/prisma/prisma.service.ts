@@ -1,12 +1,13 @@
 import { Injectable, type OnModuleDestroy } from '@nestjs/common'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from './generated/client.js'
+import { PrismaPg } from '@prisma/adapter-pg'
 import { env } from '../config/env.js'
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleDestroy {
   constructor() {
-    // 显式传入连接串，避免 Prisma 在运行期自行读取 process.env
-    super({ datasourceUrl: env.DATABASE_URL })
+    const adapter = new PrismaPg({ connectionString: env.DATABASE_URL })
+    super({ adapter })
   }
 
   async onModuleDestroy(): Promise<void> {

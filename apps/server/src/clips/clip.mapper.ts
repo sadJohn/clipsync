@@ -1,4 +1,4 @@
-import type { ClipItem } from '@prisma/client'
+import type { ClipItem } from '../prisma/generated/client.js'
 import type { ClipItemDto, ClipType } from '@clipsync/shared'
 
 export function toClipItemDto(clip: ClipItem): ClipItemDto {
