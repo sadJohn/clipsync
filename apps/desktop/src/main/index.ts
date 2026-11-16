@@ -60,6 +60,13 @@ if (!hasSingleInstanceLock) {
 
   void app.whenReady().then(() => {
     registerAppProtocol()
+
+    // 必须先隐藏 Dock 再建窗：createMainWindow 内的 setVisibleOnAllWorkspaces 依赖
+    // 当前进程类型，顺序反了会让窗口只在创建时所在的 Space 显示
+    if (process.platform === 'darwin') {
+      app.dock?.hide()
+    }
+
     createMainWindow()
 
     registerIpcHandlers({
@@ -84,11 +91,6 @@ if (!hasSingleInstanceLock) {
     })
 
     registerGlobalShortcuts(toggleWindow)
-
-    // 常驻托盘 / 菜单栏，不占用 Dock
-    if (process.platform === 'darwin') {
-      app.dock?.hide()
-    }
 
     app.on('activate', () => {
       showWindow()
