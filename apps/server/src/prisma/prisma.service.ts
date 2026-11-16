@@ -1,8 +1,14 @@
 import { Injectable, type OnModuleDestroy } from '@nestjs/common'
 import { PrismaClient } from '@prisma/client'
+import { env } from '../config/env.js'
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleDestroy {
+  constructor() {
+    // 显式传入连接串，避免 Prisma 在运行期自行读取 process.env
+    super({ datasourceUrl: env.DATABASE_URL })
+  }
+
   async onModuleDestroy(): Promise<void> {
     await this.$disconnect()
   }
