@@ -1,4 +1,4 @@
-import { IpcChannels, type LocalClipRecord } from '@clipsync/shared'
+import { IpcChannels, type ExpiredClipRef, type LocalClipRecord } from '@clipsync/shared'
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 
 export interface DesktopApi {
@@ -14,6 +14,12 @@ export interface DesktopApi {
   markClipSynced: (id: string) => Promise<void>
   /** 将云端 / 其他设备推送的记录写入本地 SQLite，返回落库后的记录 */
   upsertRemoteClip: (record: LocalClipRecord) => Promise<LocalClipRecord>
+  /** 刷新记录的最近使用时间 */
+  touchLocalClip: (id: string) => Promise<void>
+  /** 列出超期未使用的本地记录 */
+  listExpiredClips: () => Promise<ExpiredClipRef[]>
+  /** 批量删除本地记录 */
+  deleteLocalClips: (ids: string[]) => Promise<void>
   /** 隐藏悬浮窗 */
   hideWindow: () => Promise<void>
   /** 读取主进程加密保存的认证 Token */
@@ -47,6 +53,14 @@ const api: DesktopApi = {
 
   upsertRemoteClip: (record) =>
     ipcRenderer.invoke(IpcChannels.UPSERT_REMOTE_CLIP, record) as Promise<LocalClipRecord>,
+
+  touchLocalClip: (id) => ipcRenderer.invoke(IpcChannels.TOUCH_LOCAL_CLIP, id) as Promise<void>,
+
+  listExpiredClips: () =>
+    ipcRenderer.invoke(IpcChannels.LIST_EXPIRED_CLIPS) as Promise<ExpiredClipRef[]>,
+
+  deleteLocalClips: (ids) =>
+    ipcRenderer.invoke(IpcChannels.DELETE_LOCAL_CLIPS, ids) as Promise<void>,
 
   hideWindow: () => ipcRenderer.invoke(IpcChannels.WINDOW_HIDE) as Promise<void>,
 

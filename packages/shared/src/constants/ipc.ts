@@ -14,6 +14,12 @@ export const IpcChannels = {
   MARK_CLIP_SYNCED: 'local-clips:mark-synced',
   /** 渲染进程 -> 主进程：将云端 / 其他设备推送的记录写入本地 SQLite */
   UPSERT_REMOTE_CLIP: 'local-clips:upsert-remote',
+  /** 渲染进程 -> 主进程：刷新记录的最近使用时间 */
+  TOUCH_LOCAL_CLIP: 'local-clips:touch',
+  /** 渲染进程 -> 主进程：列出超期未使用的记录（自动清理用） */
+  LIST_EXPIRED_CLIPS: 'local-clips:list-expired',
+  /** 渲染进程 -> 主进程：批量删除本地记录 */
+  DELETE_LOCAL_CLIPS: 'local-clips:delete-many',
   /** 渲染进程 -> 主进程：隐藏主窗口 */
   WINDOW_HIDE: 'window:hide',
   /** 渲染进程 -> 主进程：读取加密保存的认证 Token */

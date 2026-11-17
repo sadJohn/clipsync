@@ -1,10 +1,12 @@
 import { hostname } from 'node:os'
-import type { ClipType, LocalClipRecord } from '@clipsync/shared'
-import { desc, eq } from 'drizzle-orm'
+import type { ClipType, ExpiredClipRef, LocalClipRecord } from '@clipsync/shared'
+import { and, desc, eq, inArray, lt } from 'drizzle-orm'
 import { getDb } from '../db/client'
 import { localClips, type LocalClipRow } from '../db/schema'
 
-const DEFAULT_LIMIT = 200
+const DEFAULT_LIMIT = 500
+/** 超过该时长未被使用的记录会被自动清理 */
+const RETENTION_MS = 7 * 24 * 60 * 60 * 1000
 
 function toRecord(row: LocalClipRow): LocalClipRecord {
   return {
@@ -14,7 +16,8 @@ function toRecord(row: LocalClipRow): LocalClipRecord {
     deviceName: row.deviceName,
     isPinned: row.isPinned,
     isSynced: row.isSynced,
-    createdAt: row.createdAt
+    createdAt: row.createdAt,
+    lastUsedAt: row.lastUsedAt
   }
 }
 
@@ -42,13 +45,22 @@ export const localClipService = {
     return record
   },
 
+  /** 按内容查找已有记录，用于相同内容重复复制时去重 */
+  findByContent(content: string): LocalClipRecord | null {
+    const row = getDb().select().from(localClips).where(eq(localClips.content, content)).get()
+    return row ? toRecord(row) : null
+  },
+
   /**
    * 写入来自云端 / 其他设备的记录：已存在则更新并标记为已同步，否则插入。
+   * last_used_at 取本地与云端较新的值，保证任一设备使用过都会延长保留期。
    */
   upsertRemote(record: LocalClipRecord): LocalClipRecord {
     const db = getDb()
     const syncedRecord: LocalClipRecord = { ...record, isSynced: true }
     const existing = db.select().from(localClips).where(eq(localClips.id, record.id)).get()
+    const lastUsedAt =
+      existing && existing.lastUsedAt > record.lastUsedAt ? existing.lastUsedAt : record.lastUsedAt
 
     if (existing) {
       db.update(localClips)
@@ -57,15 +69,42 @@ export const localClipService = {
           type: syncedRecord.type,
           deviceName: syncedRecord.deviceName,
           isPinned: syncedRecord.isPinned,
-          isSynced: true
+          isSynced: true,
+          lastUsedAt
         })
         .where(eq(localClips.id, record.id))
         .run()
     } else {
-      db.insert(localClips).values(syncedRecord).run()
+      db.insert(localClips)
+        .values({ ...syncedRecord, lastUsedAt })
+        .run()
     }
 
     return this.getById(record.id) ?? syncedRecord
+  },
+
+  /** 刷新最近使用时间（写回剪贴板时调用） */
+  touch(id: string): void {
+    getDb()
+      .update(localClips)
+      .set({ lastUsedAt: new Date().toISOString() })
+      .where(eq(localClips.id, id))
+      .run()
+  },
+
+  /** 列出超过保留期未使用的非置顶记录 */
+  listExpired(retentionMs = RETENTION_MS): ExpiredClipRef[] {
+    const cutoff = new Date(Date.now() - retentionMs).toISOString()
+    return getDb()
+      .select({ id: localClips.id, isSynced: localClips.isSynced })
+      .from(localClips)
+      .where(and(eq(localClips.isPinned, false), lt(localClips.lastUsedAt, cutoff)))
+      .all()
+  },
+
+  deleteMany(ids: string[]): void {
+    if (ids.length === 0) return
+    getDb().delete(localClips).where(inArray(localClips.id, ids)).run()
   },
 
   delete(id: string): void {

@@ -63,6 +63,14 @@ export class ClipboardWatcher {
 
       if (text.trim().length === 0 || text.length > MAX_CONTENT_LENGTH) return
 
+      // 相同内容重复复制时复用原记录并刷新使用时间，避免重复条目堆积
+      const existing = localClipService.findByContent(text)
+      if (existing) {
+        localClipService.touch(existing.id)
+        return
+      }
+
+      const now = new Date().toISOString()
       const record: LocalClipRecord = {
         id: randomUUID(),
         content: text,
@@ -70,7 +78,8 @@ export class ClipboardWatcher {
         deviceName: localClipService.getDeviceName(),
         isPinned: false,
         isSynced: false,
-        createdAt: new Date().toISOString()
+        createdAt: now,
+        lastUsedAt: now
       }
 
       localClipService.insert(record)

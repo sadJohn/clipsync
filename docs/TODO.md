@@ -22,6 +22,28 @@
 - 超过上限的 `POST /api/clips` 返回 400 与统一 JSON 错误格式，而非 413。
 - `pnpm typecheck && pnpm build` 通过。
 
+## 桌面端补齐 `isPinned`（置顶）功能
+
+**状态**：待办
+
+**背景**
+
+- 服务端与共享层已完整支持置顶：[schema.prisma](../apps/server/prisma/schema.prisma#L82) 有 `isPinned` 字段，[clips.service.ts](../apps/server/src/clips/clips.service.ts#L32) 按 `isPinned desc, createdAt desc` 排序，`PATCH /api/clips/:id` 支持只改 `isPinned`，[sync.gateway.ts](../apps/server/src/sync/sync.gateway.ts#L105-L123) 也实现了 `sync:pin-clip` 上行与广播。
+- 桌面端完全没有实现：`IpcChannels` 没有置顶相关通道，[local-clip-service.ts](../apps/desktop/src/main/services/local-clip-service.ts) 没有更新 `isPinned` 的方法，`localClipService.list()` 只按 `createdAt desc` 排序，渲染进程既没有置顶按钮 / 右键菜单，也从不调用 `PATCH /api/clips/:id`。
+- [socket.ts](../apps/desktop/src/renderer/src/lib/socket.ts) 只监听 `sync:new-clip` 与 `sync:delete-clip`，遗漏了 `sync:pin-clip`，导致其他设备的置顶操作不会同步到本机。
+
+**方案**
+
+- 主进程：新增 `local-clips:set-pinned` IPC，`localClipService` 增加 `setPinned(id, isPinned)`，并把 `list()` 排序改为 `isPinned desc, createdAt desc`，与云端一致。同步修改 [ipc.ts](../packages/shared/src/constants/ipc.ts)、[ipc/index.ts](../apps/desktop/src/main/ipc/index.ts)、preload `window.api` 及渲染进程类型声明（四处联动）。
+- 渲染进程：在条目上添加置顶 / 取消置顶入口，调用 `PATCH /api/clips/:id`（新增 `lib/clips-api` 包装，复用现有鉴权方式），成功后更新本地与 store；失败时回滚。
+- 实时同步：`connectSyncSocket` 增加 `onPinClip` 处理，收到 `sync:pin-clip` 后写入本地 SQLite 并更新 store。
+
+**验收**
+
+- 置顶后的条目在列表顶部出现，重启应用后仍保持置顶状态。
+- 设备 A 置顶后，设备 B 在 socket 连接正常时即时同步。
+- `pnpm typecheck && pnpm build` 通过。
+
 ## HTTP 平台从 Express 迁移到 `@nestjs/platform-node`
 
 **状态**：待评估

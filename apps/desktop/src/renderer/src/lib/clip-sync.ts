@@ -1,6 +1,7 @@
 import type { ClipItemDto, LocalClipRecord } from '@clipsync/shared'
 import { useClipStore } from '@/store/clip-store'
-import { clipsApi } from './api'
+import { ApiError, clipsApi } from './api'
+import { getAuthToken } from './auth-token'
 
 export function toClipDto(record: LocalClipRecord): ClipItemDto {
   return {
@@ -10,7 +11,8 @@ export function toClipDto(record: LocalClipRecord): ClipItemDto {
     deviceName: record.deviceName,
     isPinned: record.isPinned,
     createdAt: record.createdAt,
-    updatedAt: record.createdAt
+    updatedAt: record.createdAt,
+    lastUsedAt: record.lastUsedAt
   }
 }
 
@@ -41,5 +43,39 @@ export async function syncWithCloud(): Promise<void> {
     const record: LocalClipRecord = { ...item, isSynced: true }
     const saved = await window.api.upsertRemoteClip(record)
     useClipStore.getState().upsertClip(saved)
+  }
+}
+
+/**
+ * 自动清理超过保留期未使用的记录。
+ * 已同步的先删云端，删除失败则保留本地等待下次重试；未登录时只清理本地缓存。
+ */
+export async function purgeExpiredClips(): Promise<void> {
+  const expired = await window.api.listExpiredClips()
+  if (expired.length === 0) return
+
+  const canDeleteRemote = getAuthToken() !== null
+  const deletable: string[] = []
+
+  for (const clip of expired) {
+    if (clip.isSynced && canDeleteRemote) {
+      try {
+        await clipsApi.remove(clip.id)
+      } catch (error) {
+        // 云端已不存在视为删除成功，其余错误保留本地记录稍后重试
+        if (!(error instanceof ApiError && error.status === 404)) {
+          console.warn('[cleanup] 云端删除失败，保留本地待重试', clip.id, error)
+          continue
+        }
+      }
+    }
+    deletable.push(clip.id)
+  }
+
+  if (deletable.length === 0) return
+
+  await window.api.deleteLocalClips(deletable)
+  for (const id of deletable) {
+    useClipStore.getState().removeLocal(id)
   }
 }

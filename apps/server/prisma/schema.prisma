@@ -82,8 +82,10 @@ model ClipItem {
   isPinned   Boolean  @default(false)
   createdAt  DateTime
   updatedAt  DateTime @updatedAt
+  lastUsedAt DateTime @default(now())
 
   @@index([userId, createdAt])
   @@index([userId, updatedAt])
+  @@index([userId, lastUsedAt])
   @@map("clip_items")
 }

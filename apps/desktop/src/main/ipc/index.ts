@@ -48,6 +48,22 @@ export function registerIpcHandlers(options: IpcHandlerOptions): void {
     return localClipService.upsertRemote(parsed.data)
   })
 
+  ipcMain.handle(IpcChannels.TOUCH_LOCAL_CLIP, (_event, id: unknown) => {
+    if (typeof id !== 'string') {
+      throw new Error('id 必须是字符串')
+    }
+    localClipService.touch(id)
+  })
+
+  ipcMain.handle(IpcChannels.LIST_EXPIRED_CLIPS, () => localClipService.listExpired())
+
+  ipcMain.handle(IpcChannels.DELETE_LOCAL_CLIPS, (_event, ids: unknown) => {
+    if (!Array.isArray(ids) || ids.some((id) => typeof id !== 'string')) {
+      throw new Error('ids 必须是字符串数组')
+    }
+    localClipService.deleteMany(ids)
+  })
+
   ipcMain.handle(IpcChannels.WINDOW_HIDE, () => {
     hideWindow()
   })

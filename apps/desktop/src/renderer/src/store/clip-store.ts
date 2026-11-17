@@ -17,12 +17,19 @@ interface ClipState {
   markSynced: (id: string) => void
 }
 
+/** 内存中最多保留的记录数，避免长时间运行后列表无限增长 */
+const MAX_CLIPS = 500
+
 function sortByCreatedAtDesc(clips: LocalClipRecord[]): LocalClipRecord[] {
   return [...clips].sort((left, right) => right.createdAt.localeCompare(left.createdAt))
 }
 
+function limitClips(clips: LocalClipRecord[]): LocalClipRecord[] {
+  return clips.length > MAX_CLIPS ? clips.slice(0, MAX_CLIPS) : clips
+}
+
 function mergeClip(clips: LocalClipRecord[], clip: LocalClipRecord): LocalClipRecord[] {
-  return sortByCreatedAtDesc([clip, ...clips.filter((item) => item.id !== clip.id)])
+  return limitClips(sortByCreatedAtDesc([clip, ...clips.filter((item) => item.id !== clip.id)]))
 }
 
 export const useClipStore = create<ClipState>((set, get) => ({
@@ -33,7 +40,7 @@ export const useClipStore = create<ClipState>((set, get) => ({
   load: async () => {
     try {
       const clips = await window.api.getLocalClips()
-      set({ clips: sortByCreatedAtDesc(clips), loading: false, error: null })
+      set({ clips: limitClips(sortByCreatedAtDesc(clips)), loading: false, error: null })
     } catch (error) {
       set({
         loading: false,

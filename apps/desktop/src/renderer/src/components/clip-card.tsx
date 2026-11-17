@@ -1,7 +1,10 @@
 import type { ClipType, LocalClipRecord } from '@clipsync/shared'
 import { Cloud, CloudOff, Trash2 } from 'lucide-react'
+import { memo } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { clipsApi } from '@/lib/api'
+import { getAuthToken } from '@/lib/auth-token'
 import { useClipStore } from '@/store/clip-store'
 
 const TYPE_LABELS: Record<ClipType, string> = {
@@ -26,10 +29,19 @@ interface ClipCardProps {
   clip: LocalClipRecord
 }
 
-export function ClipCard({ clip }: ClipCardProps) {
+/**
+ * 列表项按 clip 引用比较；store 更新时未变化的条目引用保持不变，可直接跳过重渲染。
+ */
+export const ClipCard = memo(function ClipCard({ clip }: ClipCardProps) {
   const removeClip = useClipStore((state) => state.removeClip)
 
   const handleCopy = async (): Promise<void> => {
+    await window.api.touchLocalClip(clip.id)
+    if (clip.isSynced && getAuthToken()) {
+      void clipsApi.use(clip.id).catch((error: unknown) => {
+        console.warn('[sync] 使用记录上报失败', error)
+      })
+    }
     await window.api.writeClipboard(clip.content)
   }
 
@@ -87,4 +99,4 @@ export function ClipCard({ clip }: ClipCardProps) {
       </Button>
     </div>
   )
-}
+})

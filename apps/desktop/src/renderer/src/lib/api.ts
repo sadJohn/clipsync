@@ -52,5 +52,10 @@ export const clipsApi = {
   remove: (id: string) =>
     request<{ id: string }>(`/api/clips/${encodeURIComponent(id)}`, {
       method: 'DELETE'
+    }),
+  /** 上报一次使用，仅刷新服务端的 lastUsedAt，用于多端共享保留期 */
+  use: (id: string) =>
+    request<{ id: string; lastUsedAt: string }>(`/api/clips/${encodeURIComponent(id)}/use`, {
+      method: 'POST'
     })
 }

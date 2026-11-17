@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { getAuthToken } from '@/lib/auth-token'
-import { syncWithCloud } from '@/lib/clip-sync'
+import { purgeExpiredClips, syncWithCloud } from '@/lib/clip-sync'
 import { connectSyncSocket } from '@/lib/socket'
 import { useClipStore } from '@/store/clip-store'
 
@@ -36,12 +36,27 @@ export function useCloudSync(userId: string | null): void {
           .catch((error: unknown) => {
             console.warn('[sync] 远端删除同步失败', error)
           })
+      },
+      onUseClip: (id) => {
+        void window.api.touchLocalClip(id).catch((error: unknown) => {
+          console.warn('[sync] 使用时间同步失败', error)
+        })
       }
     })
 
-    void syncWithCloud().catch((error: unknown) => {
-      console.warn('[sync] 云同步失败', error)
-    })
+    // 先同步云端再清理：避免刚清理的记录被拉取回来
+    void (async () => {
+      try {
+        await syncWithCloud()
+      } catch (error: unknown) {
+        console.warn('[sync] 云同步失败', error)
+      }
+      try {
+        await purgeExpiredClips()
+      } catch (error: unknown) {
+        console.warn('[cleanup] 自动清理失败', error)
+      }
+    })()
 
     return () => {
       disposed = true

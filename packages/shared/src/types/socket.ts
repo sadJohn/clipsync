@@ -16,6 +16,12 @@ export interface SyncPinClipPayload {
   updatedAt: string
 }
 
+export interface SyncUseClipPayload {
+  id: string
+  /** ISO 8601 时间字符串 */
+  lastUsedAt: string
+}
+
 /**
  * 事件名 -> 载荷类型的映射，供客户端与服务端做类型安全的事件收发。
  */
@@ -23,4 +29,5 @@ export interface SocketEventPayloads {
   [SocketEvents.SYNC_NEW_CLIP]: SyncNewClipPayload
   [SocketEvents.SYNC_DELETE_CLIP]: SyncDeleteClipPayload
   [SocketEvents.SYNC_PIN_CLIP]: SyncPinClipPayload
+  [SocketEvents.SYNC_USE_CLIP]: SyncUseClipPayload
 }

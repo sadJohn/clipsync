@@ -66,6 +66,13 @@ export class ClipsController {
     return clip
   }
 
+  @Post(':id/use')
+  async use(@Req() request: AuthenticatedRequest, @Param('id', ParseUUIDPipe) id: string) {
+    const lastUsedAt = await this.clips.markUsed(request.user.id, id)
+    this.broadcaster.emitToUser(request.user.id, SocketEvents.SYNC_USE_CLIP, { id, lastUsedAt })
+    return { id, lastUsedAt }
+  }
+
   @Delete(':id')
   async remove(@Req() request: AuthenticatedRequest, @Param('id', ParseUUIDPipe) id: string) {
     await this.clips.remove(request.user.id, id)

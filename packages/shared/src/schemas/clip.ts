@@ -11,7 +11,8 @@ export const clipItemSchema = z.object({
   deviceName: z.string().min(1).max(64),
   isPinned: z.boolean(),
   createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime()
+  updatedAt: z.string().datetime(),
+  lastUsedAt: z.string().datetime()
 })
 
 /** 本地 SQLite 记录校验（isPinned / isSynced 为布尔语义） */
@@ -22,7 +23,8 @@ export const localClipRecordSchema = z.object({
   deviceName: z.string().min(1).max(64),
   isPinned: z.boolean(),
   isSynced: z.boolean(),
-  createdAt: z.string().datetime()
+  createdAt: z.string().datetime(),
+  lastUsedAt: z.string().datetime()
 })
 
 /** 桌面端上传新条目时的入参 */
@@ -33,7 +35,8 @@ export const createClipSchema = z.object({
   deviceName: z.string().min(1).max(64),
   isPinned: z.boolean().default(false),
   createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime().optional()
+  updatedAt: z.string().datetime().optional(),
+  lastUsedAt: z.string().datetime().optional()
 })
 
 /** 更新条目（目前仅支持修改内容与置顶状态） */

@@ -21,6 +21,8 @@ export interface ClipItemDto {
   createdAt: string
   /** ISO 8601 时间字符串 */
   updatedAt: string
+  /** ISO 8601 时间字符串，最近一次被任一设备使用的时间 */
+  lastUsedAt: string
 }
 
 /**
@@ -36,6 +38,8 @@ export interface LocalClipRecord {
   isSynced: boolean
   /** ISO 8601 时间字符串 */
   createdAt: string
+  /** ISO 8601 时间字符串，最近一次被使用的时间（自动清理依据） */
+  lastUsedAt: string
 }
 
 export const SYNC_STATUSES = ['pending', 'syncing', 'synced', 'failed'] as const
@@ -44,6 +48,14 @@ export const SYNC_STATUSES = ['pending', 'syncing', 'synced', 'failed'] as const
  * 渲染进程中展示的云端同步状态。
  */
 export type SyncStatus = (typeof SYNC_STATUSES)[number]
+
+/**
+ * 超期未使用的本地记录引用，供自动清理决定是否需要同步删除云端。
+ */
+export interface ExpiredClipRef {
+  id: string
+  isSynced: boolean
+}
 
 /**
  * 连接云端实时通道时需要携带的凭证。

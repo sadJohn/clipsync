@@ -10,11 +10,20 @@ import { Toaster } from '@/components/ui/sonner'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useCloudSync } from '@/hooks/use-cloud-sync'
 import { getAuthToken } from '@/lib/auth-token'
-import { pushClip } from '@/lib/clip-sync'
+import { pushClip, purgeExpiredClips } from '@/lib/clip-sync'
 import { useAuthStore } from '@/store/auth-store'
 import { useClipStore } from '@/store/clip-store'
 
 type Filter = 'all' | Extract<ClipType, 'TEXT' | 'CODE' | 'LINK'>
+
+/** 定期清理超期未使用的记录（应用常驻托盘，不能只依赖启动时清理） */
+const CLEANUP_INTERVAL_MS = 6 * 60 * 60 * 1000
+
+function runCleanup(): void {
+  void purgeExpiredClips().catch((cleanupError: unknown) => {
+    console.warn('[cleanup] 自动清理失败', cleanupError)
+  })
+}
 
 export default function App() {
   const clips = useClipStore((state) => state.clips)
@@ -39,6 +48,17 @@ export default function App() {
     void load()
     void initAuth()
   }, [load, initAuth])
+
+  // 已登录时由 useCloudSync 在拉取云端后清理，避免拉取前误删仍被其他设备使用的记录
+  useEffect(() => {
+    if (authStatus !== 'anonymous') return
+    runCleanup()
+  }, [authStatus])
+
+  useEffect(() => {
+    const timer = setInterval(runCleanup, CLEANUP_INTERVAL_MS)
+    return () => clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     const unsubscribe = window.api.onClipboardNew((clip) => {

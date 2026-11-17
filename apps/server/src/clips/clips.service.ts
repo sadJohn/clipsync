@@ -17,6 +17,7 @@ interface ClipUpsertInput {
   isPinned: boolean
   createdAt: string
   updatedAt: string
+  lastUsedAt: string
 }
 
 @Injectable()
@@ -43,7 +44,8 @@ export class ClipsService {
       deviceName: input.deviceName,
       isPinned: input.isPinned,
       createdAt: input.createdAt,
-      updatedAt: input.updatedAt ?? input.createdAt
+      updatedAt: input.updatedAt ?? input.createdAt,
+      lastUsedAt: input.lastUsedAt ?? input.createdAt
     })
   }
 
@@ -77,6 +79,22 @@ export class ClipsService {
     }
   }
 
+  /**
+   * 记录一次使用：只刷新 lastUsedAt，不改变内容与置顶状态。
+   * 返回写入的时间，供调用方广播给同账号其他设备。
+   */
+  async markUsed(userId: string, id: string): Promise<string> {
+    const lastUsedAt = new Date()
+    const result = await this.prisma.clipItem.updateMany({
+      where: { id, userId },
+      data: { lastUsedAt }
+    })
+    if (result.count === 0) {
+      throw new NotFoundException('剪贴板条目不存在')
+    }
+    return lastUsedAt.toISOString()
+  }
+
   private async upsert(userId: string, clip: ClipUpsertInput): Promise<ClipItemDto> {
     const existing = await this.prisma.clipItem.findUnique({ where: { id: clip.id } })
     if (existing) {
@@ -95,7 +113,8 @@ export class ClipsService {
         deviceName: clip.deviceName,
         isPinned: clip.isPinned,
         createdAt: new Date(clip.createdAt),
-        updatedAt: new Date(clip.updatedAt)
+        updatedAt: new Date(clip.updatedAt),
+        lastUsedAt: new Date(clip.lastUsedAt)
       }
     })
     return toClipItemDto(created)
