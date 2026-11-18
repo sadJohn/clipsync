@@ -1,0 +1,32 @@
+# git-cliff 配置：从 conventional commit 生成 GitHub Release 说明
+# 用法：git cliff --latest --strip header
+
+[changelog]
+header = ""
+body = """{% for group, commits in commits | group_by(attribute="group") %}### {{ group }}
+{% for commit in commits %}- {% if commit.scope %}**{{ commit.scope }}**：{% endif %}{{ commit.message | split(pat=": ") | last | trim }}
+{% endfor %}
+{% endfor %}"""
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+sort_commits = "newest"
+commit_parsers = [
+  { message = "^feat", group = "新功能" },
+  { message = "^fix", group = "问题修复" },
+  { message = "^perf", group = "性能优化" },
+  { message = "^refactor", group = "代码重构" },
+  { message = "^style", group = "样式调整" },
+  { message = "^docs", group = "文档" },
+  { message = "^test", group = "测试" },
+  { message = "^build", group = "构建" },
+  { message = "^ci", group = "持续集成" },
+  { message = "^chore.*发布", skip = true },
+  { message = "^chore", group = "其他改动" },
+]
+filter_commits = true
+tag_pattern = "v[0-9].*"
+protect_breaking_commits = true
