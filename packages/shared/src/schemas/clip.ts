@@ -3,10 +3,17 @@ import { CLIP_TYPES } from '../types/clip'
 
 export const clipTypeSchema = z.enum(CLIP_TYPES)
 
+/**
+ * 内容上限：服务端 body-parser 限制 10mb（字节）。
+ * UTF-8 中文约 3 字节/字符，保守按 3_000_000 字符兜底，
+ * 确保任何编码组合都不会触发 Express 413 绕过 Nest 异常过滤器。
+ */
+export const CONTENT_MAX = 3_000_000
+
 /** 完整的剪贴板条目传输模型校验 */
 export const clipItemSchema = z.object({
   id: z.string().uuid(),
-  content: z.string().min(1),
+  content: z.string().min(1).max(CONTENT_MAX),
   type: clipTypeSchema,
   deviceName: z.string().min(1).max(64),
   isPinned: z.boolean(),
@@ -18,7 +25,7 @@ export const clipItemSchema = z.object({
 /** 本地 SQLite 记录校验（isPinned / isSynced 为布尔语义） */
 export const localClipRecordSchema = z.object({
   id: z.string().uuid(),
-  content: z.string().min(1),
+  content: z.string().min(1).max(CONTENT_MAX),
   type: clipTypeSchema,
   deviceName: z.string().min(1).max(64),
   isPinned: z.boolean(),
@@ -30,7 +37,7 @@ export const localClipRecordSchema = z.object({
 /** 桌面端上传新条目时的入参 */
 export const createClipSchema = z.object({
   id: z.string().uuid(),
-  content: z.string().min(1),
+  content: z.string().min(1).max(CONTENT_MAX),
   type: clipTypeSchema,
   deviceName: z.string().min(1).max(64),
   isPinned: z.boolean().default(false),
@@ -42,7 +49,7 @@ export const createClipSchema = z.object({
 /** 更新条目（目前仅支持修改内容与置顶状态） */
 export const updateClipSchema = z
   .object({
-    content: z.string().min(1).optional(),
+    content: z.string().min(1).max(CONTENT_MAX).optional(),
     isPinned: z.boolean().optional()
   })
   .refine((value) => value.content !== undefined || value.isPinned !== undefined, {
