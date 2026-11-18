@@ -33,6 +33,17 @@ export function registerIpcHandlers(options: IpcHandlerOptions): void {
     localClipService.delete(id)
   })
 
+  ipcMain.handle(IpcChannels.SET_LOCAL_CLIP_PINNED, (_event, id: unknown, isPinned: unknown) => {
+    const parsedId = localClipRecordSchema.shape.id.safeParse(id)
+    if (!parsedId.success) {
+      throw new Error('id 必须是 UUID')
+    }
+    if (typeof isPinned !== 'boolean') {
+      throw new Error('isPinned 必须是布尔值')
+    }
+    return localClipService.setPinned(parsedId.data, isPinned)
+  })
+
   ipcMain.handle(IpcChannels.MARK_CLIP_SYNCED, (_event, id: unknown) => {
     if (typeof id !== 'string') {
       throw new Error('id 必须是字符串')

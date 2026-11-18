@@ -29,7 +29,7 @@ export const localClipService = {
     return getDb()
       .select()
       .from(localClips)
-      .orderBy(desc(localClips.createdAt))
+      .orderBy(desc(localClips.isPinned), desc(localClips.createdAt))
       .limit(limit)
       .all()
       .map(toRecord)
@@ -81,6 +81,12 @@ export const localClipService = {
     }
 
     return this.getById(record.id) ?? syncedRecord
+  },
+
+  /** 更新置顶状态，返回更新后的记录 */
+  setPinned(id: string, isPinned: boolean): LocalClipRecord | null {
+    getDb().update(localClips).set({ isPinned }).where(eq(localClips.id, id)).run()
+    return this.getById(id)
   },
 
   /** 刷新最近使用时间（写回剪贴板时调用） */

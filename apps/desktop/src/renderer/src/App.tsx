@@ -71,7 +71,10 @@ export default function App() {
     })
 
     const onKeyDown = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape') void window.api.hideWindow()
+      if (event.key !== 'Escape') return
+      // 有弹窗打开时由弹窗处理 Esc，避免同时隐藏悬浮窗
+      if (document.querySelector('[role="dialog"]')) return
+      void window.api.hideWindow()
     }
     const onFocus = (): void => {
       searchRef.current?.focus()

@@ -1,5 +1,5 @@
 import type { ClipItemDto, LocalClipRecord } from '@clipsync/shared'
-import { useClipStore } from '@/store/clip-store'
+import { enqueueClipTask, useClipStore } from '@/store/clip-store'
 import { ApiError, clipsApi } from './api'
 import { getAuthToken } from './auth-token'
 
@@ -16,11 +16,14 @@ export function toClipDto(record: LocalClipRecord): ClipItemDto {
   }
 }
 
-/** 上传单条本地记录，成功后回写同步标记 */
-export async function pushClip(record: LocalClipRecord): Promise<void> {
-  await clipsApi.create(toClipDto(record))
-  await window.api.markClipSynced(record.id)
-  useClipStore.getState().markSynced(record.id)
+/** 上传单条本地记录，成功后回写同步标记；与同条目的置顶操作串行执行 */
+export function pushClip(record: LocalClipRecord): Promise<void> {
+  return enqueueClipTask(record.id, async () => {
+    const current = useClipStore.getState().clips.find((clip) => clip.id === record.id) ?? record
+    await clipsApi.create(toClipDto(current))
+    await window.api.markClipSynced(record.id)
+    useClipStore.getState().markSynced(record.id)
+  })
 }
 
 /**

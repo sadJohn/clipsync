@@ -1,8 +1,17 @@
 import type { ClipType, LocalClipRecord } from '@clipsync/shared'
-import { Cloud, CloudOff, Trash2 } from 'lucide-react'
-import { memo } from 'react'
+import { Cloud, CloudOff, Pin, Trash2 } from 'lucide-react'
+import { memo, useState } from 'react'
+import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
 import { clipsApi } from '@/lib/api'
 import { getAuthToken } from '@/lib/auth-token'
 import { useClipStore } from '@/store/clip-store'
@@ -34,6 +43,9 @@ interface ClipCardProps {
  */
 export const ClipCard = memo(function ClipCard({ clip }: ClipCardProps) {
   const removeClip = useClipStore((state) => state.removeClip)
+  const togglePin = useClipStore((state) => state.togglePin)
+  const isPinning = useClipStore((state) => state.pinningIds.has(clip.id))
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   const handleCopy = async (): Promise<void> => {
     await window.api.touchLocalClip(clip.id)
@@ -51,6 +63,7 @@ export const ClipCard = memo(function ClipCard({ clip }: ClipCardProps) {
       tabIndex={0}
       onClick={() => void handleCopy()}
       onKeyDown={(event) => {
+        if (event.target !== event.currentTarget) return
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault()
           void handleCopy()
@@ -58,18 +71,18 @@ export const ClipCard = memo(function ClipCard({ clip }: ClipCardProps) {
       }}
       className="group relative cursor-pointer rounded-xl border border-border/70 bg-card/70 p-3 transition-colors hover:border-primary/40 hover:bg-card focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 focus-visible:outline-none"
     >
-      <p className="line-clamp-3 pr-6 text-[13px] leading-relaxed wrap-break-words whitespace-pre-wrap">
+      <p className="line-clamp-3 pr-14 text-[13px] leading-relaxed wrap-break-words whitespace-pre-wrap">
         {clip.content}
       </p>
 
-      <div className="mt-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
-        <Badge variant="secondary" className="bg-primary/10 text-primary">
+      <div className="mt-2 flex min-w-0 items-center gap-1.5 text-[10px] text-muted-foreground">
+        <Badge variant="secondary" className="shrink-0 bg-primary/10 text-primary">
           {TYPE_LABELS[clip.type]}
         </Badge>
-        <span className="max-w-27.5 truncate">{clip.deviceName}</span>
+        <span className="min-w-0 max-w-27.5 truncate">{clip.deviceName}</span>
         <span>·</span>
         <span>{formatTime(clip.createdAt)}</span>
-        <span className="ml-auto flex items-center gap-1">
+        <span className="ml-auto flex shrink-0 items-center gap-1">
           {clip.isSynced ? (
             <>
               <Cloud className="size-3 text-emerald-400" />
@@ -88,15 +101,74 @@ export const ClipCard = memo(function ClipCard({ clip }: ClipCardProps) {
         type="button"
         variant="ghost"
         size="icon"
+        title={clip.isPinned ? '取消置顶' : '置顶记录'}
+        aria-label="置顶记录"
+        aria-pressed={clip.isPinned}
+        disabled={isPinning}
+        className={`absolute top-2 right-8 size-6 transition-opacity focus-visible:opacity-100 ${
+          clip.isPinned
+            ? 'text-primary opacity-100'
+            : 'text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-primary'
+        }`}
+        onClick={(event) => {
+          event.stopPropagation()
+          void togglePin(clip.id).catch((error: unknown) => {
+            console.warn('[clip] 置顶操作失败', error)
+            toast.error('置顶操作失败，请重试')
+          })
+        }}
+      >
+        <Pin className="size-3.5" fill={clip.isPinned ? 'currentColor' : 'none'} />
+      </Button>
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
         title="删除记录"
+        aria-label="删除记录"
         className="absolute top-2 right-2 size-6 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
         onClick={(event) => {
           event.stopPropagation()
+          if (clip.isPinned) {
+            setConfirmOpen(true)
+            return
+          }
           void removeClip(clip.id)
         }}
       >
         <Trash2 className="size-3.5" />
       </Button>
+
+      {clip.isPinned ? (
+        <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <DialogContent
+            showCloseButton={false}
+            className="max-w-80"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <DialogHeader>
+              <DialogTitle>删除置顶记录？</DialogTitle>
+              <DialogDescription>删除后无法恢复，并会同步从云端及其他设备移除。</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setConfirmOpen(false)}>
+                取消
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => {
+                  setConfirmOpen(false)
+                  void removeClip(clip.id)
+                }}
+              >
+                删除
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </div>
   )
 })

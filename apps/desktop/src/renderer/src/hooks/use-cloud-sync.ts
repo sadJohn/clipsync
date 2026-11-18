@@ -37,6 +37,18 @@ export function useCloudSync(userId: string | null): void {
             console.warn('[sync] 远端删除同步失败', error)
           })
       },
+      onPinClip: ({ id, isPinned }) => {
+        void window.api
+          .setLocalClipPinned(id, isPinned)
+          .then((saved) => {
+            if (disposed || !saved) return
+            const exists = useClipStore.getState().clips.some((clip) => clip.id === id)
+            if (exists) useClipStore.getState().upsertClip(saved)
+          })
+          .catch((error: unknown) => {
+            console.warn('[sync] 置顶状态同步失败', error)
+          })
+      },
       onUseClip: (id) => {
         void window.api.touchLocalClip(id).catch((error: unknown) => {
           console.warn('[sync] 使用时间同步失败', error)

@@ -10,6 +10,8 @@ export const IpcChannels = {
   GET_LOCAL_CLIPS: 'local-clips:get',
   /** 渲染进程 -> 主进程：删除本地剪贴板记录 */
   DELETE_LOCAL_CLIP: 'local-clips:delete',
+  /** 渲染进程 -> 主进程：设置本地记录置顶状态 */
+  SET_LOCAL_CLIP_PINNED: 'local-clips:set-pinned',
   /** 渲染进程 -> 主进程：标记本地记录已同步至云端 */
   MARK_CLIP_SYNCED: 'local-clips:mark-synced',
   /** 渲染进程 -> 主进程：将云端 / 其他设备推送的记录写入本地 SQLite */

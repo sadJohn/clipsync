@@ -3,6 +3,7 @@ import {
   type LocalClipRecord,
   type SyncDeleteClipPayload,
   type SyncNewClipPayload,
+  type SyncPinClipPayload,
   type SyncUseClipPayload
 } from '@clipsync/shared'
 import { io, type Socket } from 'socket.io-client'
@@ -11,6 +12,7 @@ import { SERVER_URL } from './server'
 interface SyncSocketHandlers {
   onNewClip: (clip: LocalClipRecord) => void
   onDeleteClip: (id: string) => void
+  onPinClip: (payload: SyncPinClipPayload) => void
   onUseClip: (id: string) => void
 }
 
@@ -38,6 +40,10 @@ export function connectSyncSocket(token: string, handlers: SyncSocketHandlers): 
 
   socket.on(SocketEvents.SYNC_DELETE_CLIP, (payload: SyncDeleteClipPayload) => {
     handlers.onDeleteClip(payload.id)
+  })
+
+  socket.on(SocketEvents.SYNC_PIN_CLIP, (payload: SyncPinClipPayload) => {
+    handlers.onPinClip(payload)
   })
 
   socket.on(SocketEvents.SYNC_USE_CLIP, (payload: SyncUseClipPayload) => {

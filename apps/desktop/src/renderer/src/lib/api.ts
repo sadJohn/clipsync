@@ -49,6 +49,11 @@ export const clipsApi = {
       method: 'POST',
       body: JSON.stringify(clip)
     }),
+  updatePin: (id: string, isPinned: boolean) =>
+    request<ClipItemDto>(`/api/clips/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ isPinned })
+    }),
   remove: (id: string) =>
     request<{ id: string }>(`/api/clips/${encodeURIComponent(id)}`, {
       method: 'DELETE'

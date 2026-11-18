@@ -10,6 +10,8 @@ export interface DesktopApi {
   writeClipboard: (content: string) => Promise<void>
   /** 删除本地记录 */
   deleteLocalClip: (id: string) => Promise<void>
+  /** 设置本地记录置顶状态，不存在时返回 null */
+  setLocalClipPinned: (id: string, isPinned: boolean) => Promise<LocalClipRecord | null>
   /** 标记本地记录已同步至云端 */
   markClipSynced: (id: string) => Promise<void>
   /** 将云端 / 其他设备推送的记录写入本地 SQLite，返回落库后的记录 */
@@ -48,6 +50,13 @@ const api: DesktopApi = {
     ipcRenderer.invoke(IpcChannels.CLIPBOARD_WRITE, content) as Promise<void>,
 
   deleteLocalClip: (id) => ipcRenderer.invoke(IpcChannels.DELETE_LOCAL_CLIP, id) as Promise<void>,
+
+  setLocalClipPinned: (id, isPinned) =>
+    ipcRenderer.invoke(
+      IpcChannels.SET_LOCAL_CLIP_PINNED,
+      id,
+      isPinned
+    ) as Promise<LocalClipRecord | null>,
 
   markClipSynced: (id) => ipcRenderer.invoke(IpcChannels.MARK_CLIP_SYNCED, id) as Promise<void>,
 
