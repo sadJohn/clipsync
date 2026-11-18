@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS, type ClipType } from '@clipsync/shared'
+import { DEFAULT_SETTINGS, type ClipType, type Theme } from '@clipsync/shared'
 import { Loader2, LogIn, LogOut, Search, Settings } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AuthDialog } from '@/components/auth-dialog'
@@ -11,8 +11,9 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useCloudSync } from '@/hooks/use-cloud-sync'
 import { getAuthToken } from '@/lib/auth-token'
 import { pushClip, purgeExpiredClips } from '@/lib/clip-sync'
+import { applyTheme } from '@/lib/theme'
 import { useAuthStore } from '@/store/auth-store'
-import { useClipStore } from '@/store/clip-store'
+import { applyMaxClips, useClipStore } from '@/store/clip-store'
 
 type Filter = 'all' | Extract<ClipType, 'TEXT' | 'CODE' | 'LINK'>
 
@@ -41,27 +42,34 @@ export default function App() {
   const [filter, setFilter] = useState<Filter>('all')
   const [authOpen, setAuthOpen] = useState(false)
   const [accelerator, setAccelerator] = useState<string>(DEFAULT_SETTINGS.toggleAccelerator)
+  const [theme, setTheme] = useState<Theme>(DEFAULT_SETTINGS.theme)
   const searchRef = useRef<HTMLInputElement>(null)
 
   useCloudSync(authStatus === 'authenticated' ? (user?.id ?? null) : null)
 
   useEffect(() => {
-    void load()
     void initAuth()
-  }, [load, initAuth])
+  }, [initAuth])
 
-  // 快捷键可在设置窗口修改，窗口重新获得焦点时刷新底部提示
+  // 设置可在独立窗口修改，窗口获得焦点时刷新快捷键 / 主题 / 保留数量，并重新载入本地记录
   useEffect(() => {
     const refresh = (): void => {
       void window.api
         .getSettings()
-        .then((next) => setAccelerator(next.toggleAccelerator))
+        .then((next) => {
+          setAccelerator(next.toggleAccelerator)
+          setTheme(next.theme)
+          applyTheme(next.theme)
+          applyMaxClips(next.maxClips)
+        })
         .catch(() => {})
+      void load()
     }
+
     refresh()
     window.addEventListener('focus', refresh)
     return () => window.removeEventListener('focus', refresh)
-  }, [])
+  }, [load])
 
   // 已登录时由 useCloudSync 在拉取云端后清理，避免拉取前误删仍被其他设备使用的记录
   useEffect(() => {
@@ -77,11 +85,18 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = window.api.onClipboardNew((clip) => {
       addClip(clip)
-      if (getAuthToken()) {
-        void pushClip(clip).catch((syncError: unknown) => {
+      if (!getAuthToken()) return
+
+      // 每次按最新设置判断，避免设置窗口修改后主窗口仍使用旧值
+      void (async () => {
+        try {
+          const { autoSyncNewClip } = await window.api.getSettings()
+          if (!autoSyncNewClip) return
+          await pushClip(clip)
+        } catch (syncError) {
           console.warn('[sync] 新条目上传失败', syncError)
-        })
-      }
+        }
+      })()
     })
 
     const onKeyDown = (event: KeyboardEvent): void => {
@@ -207,7 +222,7 @@ export default function App() {
       </footer>
 
       <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
-      <Toaster />
+      <Toaster theme={theme === 'system' ? 'system' : theme} />
     </div>
   )
 }

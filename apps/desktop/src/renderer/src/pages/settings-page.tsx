@@ -1,9 +1,10 @@
-import type { UpdateStatus } from '@clipsync/shared'
+import type { Theme, UpdateStatus } from '@clipsync/shared'
 import { Loader2 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { applyTheme } from '@/lib/theme'
 import { useAuthStore } from '@/store/auth-store'
 import { useSettingsStore } from '@/store/settings-store'
 
@@ -12,6 +13,26 @@ const HIDE_DELAY_OPTIONS = [
   { value: 1000, label: '1 秒' },
   { value: 3000, label: '3 秒' },
   { value: 5000, label: '5 秒' }
+] as const
+
+const MAX_CLIPS_OPTIONS = [
+  { value: 200, label: '200' },
+  { value: 500, label: '500' },
+  { value: 1000, label: '1000' },
+  { value: 2000, label: '2000' }
+] as const
+
+const EXPIRE_DAYS_OPTIONS = [
+  { value: 0, label: '永不' },
+  { value: 7, label: '7 天' },
+  { value: 30, label: '30 天' },
+  { value: 90, label: '90 天' }
+] as const
+
+const THEME_OPTIONS = [
+  { value: 'system', label: '跟随系统' },
+  { value: 'light', label: '浅色' },
+  { value: 'dark', label: '深色' }
 ] as const
 
 /** 更新状态对应的说明文案 */
@@ -195,6 +216,35 @@ function SettingsRow({ label, description, children }: SettingsRowProps) {
   )
 }
 
+interface Option {
+  value: number | string
+  label: string
+}
+
+interface OptionGroupProps {
+  value: number | string
+  options: readonly Option[]
+  onChange: (value: number | string) => void
+}
+
+/** 单选按钮组，用于几档固定选项 */
+function OptionGroup({ value, options, onChange }: OptionGroupProps) {
+  return (
+    <div className="flex items-center gap-1">
+      {options.map((option) => (
+        <Button
+          key={option.value}
+          size="sm"
+          variant={value === option.value ? 'default' : 'outline'}
+          onClick={() => onChange(option.value)}
+        >
+          {option.label}
+        </Button>
+      ))}
+    </div>
+  )
+}
+
 export default function SettingsPage() {
   const settings = useSettingsStore((state) => state.settings)
   const loadSettings = useSettingsStore((state) => state.load)
@@ -262,18 +312,49 @@ export default function SettingsPage() {
                 </SettingsRow>
 
                 <SettingsRow label="失焦隐藏" description="悬浮窗失去焦点后延迟收起">
-                  <div className="flex items-center gap-1">
-                    {HIDE_DELAY_OPTIONS.map((option) => (
-                      <Button
-                        key={option.value}
-                        size="sm"
-                        variant={settings.hideDelayMs === option.value ? 'default' : 'outline'}
-                        onClick={() => void update({ hideDelayMs: option.value })}
-                      >
-                        {option.label}
-                      </Button>
-                    ))}
-                  </div>
+                  <OptionGroup
+                    value={settings.hideDelayMs}
+                    options={HIDE_DELAY_OPTIONS}
+                    onChange={(value) => void update({ hideDelayMs: Number(value) })}
+                  />
+                </SettingsRow>
+
+                <SettingsRow label="自动同步" description="新复制的剪贴板内容自动上传到云端">
+                  <Switch
+                    checked={settings.autoSyncNewClip}
+                    onCheckedChange={(checked) => void update({ autoSyncNewClip: checked })}
+                  />
+                </SettingsRow>
+
+                <SettingsRow
+                  label="最多显示"
+                  description="列表中最多展示的记录数，超出部分不再显示"
+                >
+                  <OptionGroup
+                    value={settings.maxClips}
+                    options={MAX_CLIPS_OPTIONS}
+                    onChange={(value) => void update({ maxClips: Number(value) })}
+                  />
+                </SettingsRow>
+
+                <SettingsRow label="自动清理" description="删除超过设定天数未使用的记录">
+                  <OptionGroup
+                    value={settings.expireDays}
+                    options={EXPIRE_DAYS_OPTIONS}
+                    onChange={(value) => void update({ expireDays: Number(value) })}
+                  />
+                </SettingsRow>
+
+                <SettingsRow label="主题" description="切换界面配色，跟随系统时自动适配">
+                  <OptionGroup
+                    value={settings.theme}
+                    options={THEME_OPTIONS}
+                    onChange={(value) => {
+                      const theme = value as Theme
+                      applyTheme(theme)
+                      void update({ theme })
+                    }}
+                  />
                 </SettingsRow>
               </section>
             )}

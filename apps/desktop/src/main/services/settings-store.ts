@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { DEFAULT_SETTINGS, type Settings } from '@clipsync/shared'
+import { DEFAULT_SETTINGS, THEMES, type Settings } from '@clipsync/shared'
 import { app } from 'electron'
 
 /**
@@ -11,6 +11,11 @@ let cached: Settings | null = null
 
 function filePath(): string {
   return join(app.getPath('userData'), 'settings.json')
+}
+
+function normalizeInteger(value: number, fallback: number, min: number): number {
+  if (!Number.isFinite(value)) return fallback
+  return Math.max(min, Math.floor(value))
 }
 
 /** 以默认值为底，只接受与默认值同类型的字段 */
@@ -27,6 +32,15 @@ function mergeSettings(raw: unknown): Settings {
       Object.assign(merged, { [key]: value })
     }
   }
+
+  merged.maxClips = normalizeInteger(merged.maxClips, DEFAULT_SETTINGS.maxClips, 1)
+  merged.expireDays = normalizeInteger(merged.expireDays, DEFAULT_SETTINGS.expireDays, 0)
+  merged.hideDelayMs = normalizeInteger(merged.hideDelayMs, DEFAULT_SETTINGS.hideDelayMs, 0)
+
+  if (!THEMES.includes(merged.theme)) {
+    merged.theme = DEFAULT_SETTINGS.theme
+  }
+
   return merged
 }
 

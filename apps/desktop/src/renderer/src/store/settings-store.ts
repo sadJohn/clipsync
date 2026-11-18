@@ -1,5 +1,7 @@
 import { DEFAULT_SETTINGS, type Settings } from '@clipsync/shared'
 import { create } from 'zustand'
+import { getAuthToken } from '@/lib/auth-token'
+import { purgeExpiredClips, pushPendingClips } from '@/lib/clip-sync'
 
 interface SettingsState {
   settings: Settings
@@ -41,6 +43,20 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     try {
       const settings = await window.api.setSettings(patch)
       set({ settings })
+
+      // 清理策略变更后立即按新规则清理一次
+      if (patch.maxClips !== undefined || patch.expireDays !== undefined) {
+        void purgeExpiredClips().catch((cleanupError: unknown) => {
+          console.warn('[cleanup] 设置变更后清理失败', cleanupError)
+        })
+      }
+
+      // 重新开启自动同步时，补传关闭期间积压的未同步记录
+      if (patch.autoSyncNewClip === true && getAuthToken()) {
+        void pushPendingClips().catch((syncError: unknown) => {
+          console.warn('[sync] 补传未同步记录失败', syncError)
+        })
+      }
     } catch (error) {
       console.warn('[settings] 保存失败', error)
       set({ error: errorMessage(error) })

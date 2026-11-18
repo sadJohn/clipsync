@@ -1,4 +1,4 @@
-import type { LocalClipRecord } from '@clipsync/shared'
+import { DEFAULT_SETTINGS, type LocalClipRecord } from '@clipsync/shared'
 import { create } from 'zustand'
 import { clipsApi } from '@/lib/api'
 import { getAuthToken } from '@/lib/auth-token'
@@ -21,8 +21,14 @@ interface ClipState {
   markSynced: (id: string) => void
 }
 
-/** 内存中最多保留的记录数，避免长时间运行后列表无限增长 */
-const MAX_CLIPS = 500
+/** 内存中最多保留的记录数，随设置里的 maxClips 变化 */
+let maxClips = DEFAULT_SETTINGS.maxClips
+
+/** 应用设置里的最大保留数，并立即裁剪内存列表 */
+export function applyMaxClips(limit: number): void {
+  maxClips = Math.max(1, Math.floor(limit))
+  useClipStore.setState((state) => ({ clips: limitClips(state.clips) }))
+}
 
 const clipTasks = new Map<string, Promise<unknown>>()
 
@@ -46,7 +52,7 @@ function sortClips(clips: LocalClipRecord[]): LocalClipRecord[] {
 }
 
 function limitClips(clips: LocalClipRecord[]): LocalClipRecord[] {
-  return clips.length > MAX_CLIPS ? clips.slice(0, MAX_CLIPS) : clips
+  return clips.length > maxClips ? clips.slice(0, maxClips) : clips
 }
 
 function mergeClip(clips: LocalClipRecord[], clip: LocalClipRecord): LocalClipRecord[] {

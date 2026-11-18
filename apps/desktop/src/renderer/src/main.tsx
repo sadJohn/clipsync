@@ -1,7 +1,9 @@
+import { DEFAULT_SETTINGS } from '@clipsync/shared'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 import { hydrateAuthToken } from './lib/auth-token'
+import { applyTheme } from './lib/theme'
 import SettingsPage from './pages/settings-page'
 import './index.css'
 
@@ -17,10 +19,18 @@ const root = createRoot(container)
 const isSettingsWindow = window.location.hash.startsWith('#/settings')
 
 /**
- * 先把加密保存的 Token 读入内存再渲染，
- * 保证首屏的 getSession / 同步请求已经能拿到 Bearer Token。
+ * 先把主题与加密保存的 Token 准备好再渲染，
+ * 保证首屏不会闪错主题，且 getSession / 同步请求已经能拿到 Bearer Token。
  */
 async function bootstrap(): Promise<void> {
+  try {
+    const settings = await window.api.getSettings()
+    applyTheme(settings.theme)
+  } catch (error) {
+    console.warn('[theme] 设置读取失败，使用默认主题', error)
+    applyTheme(DEFAULT_SETTINGS.theme)
+  }
+
   try {
     await hydrateAuthToken()
   } catch (error) {

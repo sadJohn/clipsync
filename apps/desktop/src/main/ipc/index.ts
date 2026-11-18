@@ -21,7 +21,9 @@ export function registerIpcHandlers(options: IpcHandlerOptions): void {
   if (registered) return
   registered = true
 
-  ipcMain.handle(IpcChannels.GET_LOCAL_CLIPS, () => localClipService.list())
+  ipcMain.handle(IpcChannels.GET_LOCAL_CLIPS, () =>
+    localClipService.list(settingsStore.getSettings().maxClips)
+  )
 
   ipcMain.handle(IpcChannels.CLIPBOARD_WRITE, async (_event, content: unknown) => {
     if (typeof content !== 'string') {
@@ -72,7 +74,11 @@ export function registerIpcHandlers(options: IpcHandlerOptions): void {
     localClipService.touch(id)
   })
 
-  ipcMain.handle(IpcChannels.LIST_EXPIRED_CLIPS, () => localClipService.listExpired())
+  ipcMain.handle(IpcChannels.LIST_EXPIRED_CLIPS, () => {
+    const { expireDays } = settingsStore.getSettings()
+    if (expireDays <= 0) return []
+    return localClipService.listExpired(expireDays * 24 * 60 * 60 * 1000)
+  })
 
   ipcMain.handle(IpcChannels.DELETE_LOCAL_CLIPS, (_event, ids: unknown) => {
     if (!Array.isArray(ids) || ids.some((id) => typeof id !== 'string')) {

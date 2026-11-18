@@ -5,5 +5,9 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = {
   autoLaunch: false,
   toggleAccelerator: 'Alt+V',
   hideDelayMs: 0,
-  autoUpdate: true
+  autoUpdate: true,
+  maxClips: 500,
+  expireDays: 30,
+  autoSyncNewClip: true,
+  theme: 'system'
 }

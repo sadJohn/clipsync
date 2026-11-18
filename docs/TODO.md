@@ -1,69 +1,106 @@
 # TODO
 
-## 为 `createClipSchema.content` 增加长度上限
+---
 
-**状态**：待办
+## 一期：设置基础设施 + 核心功能 ✅
 
-**背景**
+### 设置基础设施 ✅
 
-- [main.ts](../apps/server/src/main.ts#L29-L32) 的 `json({ limit: '10mb' })` 是当前唯一的体积门槛。
-- [clip.ts](../packages/shared/src/schemas/clip.ts#L29-L35) 的 `createClipSchema.content` 只有 `z.string().min(1)`，没有上限，校验层拦不住超大内容。
-- 超限请求会由 body-parser 抛出 `PayloadTooLargeError`（413），该错误在 Express 中间件层抛出、绕过 Nest 异常过滤器，返回的不是项目统一的 JSON 错误结构。
-- 桌面端上传失败会停留在 `isSynced = false`，下一轮继续重试、继续 413，形成永远同步不上去的记录。
+1. **`@clipsync/shared` 定义 Settings 类型 + IPC 通道** ✅
+   - 新增 `Settings` 接口（见下方分期设置项）
+   - `IpcChannels` 增加 `SETTINGS_GET` / `SETTINGS_SET` / `SETTINGS_OPEN`
 
-**方案**
+2. **主进程 SettingsStore** ✅
+   - `src/main/services/settings-store.ts`
+   - 读写路径：`app.getPath('userData')/settings.json`
+   - 默认值合并（缺失字段填默认值）
+   - 提供 `getSettings()` / `setSettings(patch)` 方法
 
-- 在 `createClipSchema` 中补充 `content` 上限，例如 `z.string().min(1).max(10_000_000)`，使超限在业务层返回结构化的 400。
-- 待确认：Zod `.max()` 按字符数计，而 body-parser 的 `10mb` 按字节计（中文 UTF-8 约 3 字节/字符）。若要严格对齐请求体上限，字符数应取更小的值（如 `3_000_000`），或改为按 `Buffer.byteLength` 校验。
-- 可选：同时给 `updateClipSchema.content` 加一致的上限。
+3. **preload + IPC 链路** ✅
+   - `src/main/ipc/index.ts` 注册 handler
+   - `src/preload/index.ts` 暴露 `window.api.getSettings` / `window.api.setSettings`
+   - 渲染进程类型声明同步
 
-**验收**
+4. **设置窗口** ✅
+   - `src/main/window.ts` 或独立 `src/main/services/settings-window.ts`
+   - 单例复用（首次创建，后续 focus）
+   - 窗口属性：可调大小、有 frame、有 Dock、不失焦隐藏、可移动
+   - 推荐尺寸：560 × 640
 
-- 超过上限的 `POST /api/clips` 返回 400 与统一 JSON 错误格式，而非 413。
-- `pnpm typecheck && pnpm build` 通过。
+5. **设置入口** ✅
+   - Tray 右键菜单加「设置…」项 → 调用 `openSettingsWindow()`
+   - 主窗口 header 右侧加齿轮图标（同一路径打开）
 
-## 桌面端补齐 `isPinned`（置顶）功能
+6. **渲染进程设置页面** ✅
+   - `src/renderer/src/store/settings-store.ts`（zustand）
+   - `src/renderer/src/pages/settings-page.tsx`
+   - Tab 或分节：通用 / 账号 / 关于
 
-**状态**：待办
+### 设置项：一期 ✅
 
-**背景**
+7. **开机自启** ✅
+   - 主进程调用 `app.setLoginItemSettings({ openAtLogin })`
+   - Settings 字段：`autoLaunch: boolean`（默认 `false`）
+   - UI：Switch
 
-- 服务端与共享层已完整支持置顶：[schema.prisma](../apps/server/prisma/schema.prisma#L82) 有 `isPinned` 字段，[clips.service.ts](../apps/server/src/clips/clips.service.ts#L32) 按 `isPinned desc, createdAt desc` 排序，`PATCH /api/clips/:id` 支持只改 `isPinned`，[sync.gateway.ts](../apps/server/src/sync/sync.gateway.ts#L105-L123) 也实现了 `sync:pin-clip` 上行与广播。
-- 桌面端完全没有实现：`IpcChannels` 没有置顶相关通道，[local-clip-service.ts](../apps/desktop/src/main/services/local-clip-service.ts) 没有更新 `isPinned` 的方法，`localClipService.list()` 只按 `createdAt desc` 排序，渲染进程既没有置顶按钮 / 右键菜单，也从不调用 `PATCH /api/clips/:id`。
-- [socket.ts](../apps/desktop/src/renderer/src/lib/socket.ts) 只监听 `sync:new-clip` 与 `sync:delete-clip`，遗漏了 `sync:pin-clip`，导致其他设备的置顶操作不会同步到本机。
+8. **全局快捷键自定义** ✅
+   - 当前硬编码 `Alt+V`（`shortcut-manager.ts`）
+   - Settings 字段：`toggleAccelerator: string`（默认 `"Alt+V"`）
+   - 修改流程：`unregisterAll()` → 读取新 accelerator → `register()` → 失败回滚
+   - UI：按键录制 + electron accelerator 格式校验 + 冲突检测
+   - 实现说明：录制期间主进程会挂起全局快捷键，避免按键直接切换窗口
 
-**方案**
+9. **失焦隐藏延迟** ✅
+   - 当前 `window.ts` blur 立即 hide
+   - Settings 字段：`hideDelayMs: number`（默认 `0`，即立即）
+   - 主进程 blur 改为 `setTimeout(hide, hideDelayMs)` + 再 show 时 `clearTimeout`
+   - UI：Slider 或数字输入，建议 0 / 1000 / 3000 / 5000 档位
 
-- 主进程：新增 `local-clips:set-pinned` IPC，`localClipService` 增加 `setPinned(id, isPinned)`，并把 `list()` 排序改为 `isPinned desc, createdAt desc`，与云端一致。同步修改 [ipc.ts](../packages/shared/src/constants/ipc.ts)、[ipc/index.ts](../apps/desktop/src/main/ipc/index.ts)、preload `window.api` 及渲染进程类型声明（四处联动）。
-- 渲染进程：在条目上添加置顶 / 取消置顶入口，调用 `PATCH /api/clips/:id`（新增 `lib/clips-api` 包装，复用现有鉴权方式），成功后更新本地与 store；失败时回滚。
-- 实时同步：`connectSyncSocket` 增加 `onPinClip` 处理，收到 `sync:pin-clip` 后写入本地 SQLite 并更新 store。
+10. **检查更新** ✅
+    - 安装 `electron-updater`
+    - `electron-builder.yml` 配 publish provider（GitHub Releases）
+    - 主进程 `src/main/services/updater.ts` 封装 `autoUpdater`，发送状态事件到 renderer
+    - 设置页加「检查更新」按钮 + 版本信息 + 自动更新开关
+    - Settings 字段：`autoUpdate: boolean`（默认 `true`）
 
-**验收**
+---
 
-- 置顶后的条目在列表顶部出现，重启应用后仍保持置顶状态。
-- 设备 A 置顶后，设备 B 在 socket 连接正常时即时同步。
-- `pnpm typecheck && pnpm build` 通过。
+## 二期：体验增强 ✅
 
-## HTTP 平台从 Express 迁移到 `@nestjs/platform-node`
+11. **清理策略可配** ✅
+    - 当前 clip-store 硬编码 `MAX_CLIPS = 500`
+    - `purgeExpiredClips` 超期逻辑也需暴露
+    - Settings 字段：`maxClips: number`（默认 `500`）、`expireDays: number`（默认 `30`，`0` 表示永不超期）
+    - 设置变更后触发一次清理
+    - 实现说明：`maxClips` 作为列表展示上限；修改 `maxClips` / `expireDays` 后立即触发一次过期清理
 
-**状态**：待评估
+12. **自动同步新剪贴板开关** ✅
+    - 当前 `App.tsx` 中 `pushClip` 无条件调用
+    - Settings 字段：`autoSyncNewClip: boolean`（默认 `true`）
+    - 关闭时本地记录 `isSynced = false`，后续手动触发
+    - 实现说明：重新开启开关时自动补传关闭期间积压的未同步记录
 
-**背景**
+13. **主题** ✅
+    - Settings 字段：`theme: 'light' | 'dark' | 'system'`（默认 `'system'`）
+    - renderer 根元素 `data-theme` 属性切换 CSS 变量
+    - system 模式监听 `matchMedia('(prefers-color-scheme: dark)')`
+    - 主进程无需参与（纯 renderer 侧）
 
-- NestJS 官方文档（[HTTP adapters / NodeAdapter](https://docs.nestjs.com/http/performance#node-adapter)、[Nest vs Fastify, Express and Hono](https://docs.nestjs.com/faq/nest-vs-fastify-express-hono)）将 `NodeAdapter`（直接跑在 `node:http` 上）列为 Express / Fastify 之外的官方平台选项；官方基准中 Nest on Node 的 RPS 约为 Nest on Express 的 1.5 倍，接近 Fastify。
-- 服务端目前使用 `@nestjs/platform-express`（[package.json](../apps/server/package.json#L17-L31)），并且在 [main.ts](../apps/server/src/main.ts) 里大量依赖 Express 能力：`NestExpressApplication`、`getHttpAdapter().getInstance()`、`express.json()/urlencoded()`。
-- 版本已就绪：`@nestjs/platform-node@12.5.0` 与当前 `@nestjs/core@12.5.0` 对齐。
+---
 
-**迁移点**
+## 三期：账号 + 远期
 
-- 依赖：`@nestjs/platform-express` → `@nestjs/platform-node`；确认 `express` / `@types/express` 是否可移除。
-- [main.ts](../apps/server/src/main.ts)：`NestExpressApplication` → `NestNodeApplication`，`app.getHttpAdapter().getInstance()` 返回的是 `NodeRouter` 而非 Express 实例，Better Auth 的挂载方式需改写。
-- body 解析：`NodeAdapter` 内置 body-parser（默认上限同为 `100kb`），改用 `app.useBodyParser('json', { limit: '10mb' })` 与 `useBodyParser('urlencoded', ...)`，并继续保持「auth 先于 body 解析」的顺序。`NodeJsonParserOptions` 提供 `verify`，可保留原始 body 供将来 webhook 验签。
-- [auth.guard.ts](../apps/server/src/auth/auth.guard.ts)：`import type { Request } from 'express'` 需换成 `NodeRequest` / `IncomingMessage`；`fromNodeHeaders` 不受影响。
-- 兼容性待验证：`app.enableCors` 在 `NestNodeApplication` 上有声明；Socket.IO 依赖 `listen()` 返回的 `http.Server`，需实测网关广播；Connect 风格中间件只支持 Node 原生 API 子集。
+14. **账号设置**
+    - 改昵称：Better Auth `updateUser()` ✅ 默认支持
+    - 改密码：Better Auth `changePassword()` ✅ 默认支持
+    - 退出登录：已有 signOut
+    - 删除账号：需加 `account-deletion` 插件
+    - 改邮箱 / 忘记密码：需加 `email-verification` 插件（发验证邮件）—— 远期
 
-**验收**
+15. **跳过特定应用的剪贴板**（远期）
+    - 主进程 `ClipboardWatcher` 需读当前前台 app bundle id
+    - macOS：`NSWorkspace`（ObjC bridge 或 electron 原生能力）
+    - Windows：需另查方式
+    - 代价较高，暂缓
 
-- `pnpm typecheck && pnpm build` 通过，`GET /api/health` 正常。
-- 邮箱密码登录（Bearer）→ 上传 Clip → Socket.IO `sync:new-clip` 广播链路端到端可用。
-- 超大请求仍按 `10mb` 边界被拒，行为与迁移前一致。
+---

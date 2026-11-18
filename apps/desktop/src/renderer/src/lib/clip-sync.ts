@@ -26,10 +26,8 @@ export function pushClip(record: LocalClipRecord): Promise<void> {
   })
 }
 
-/**
- * 登录后的全量同步：先上传本地未同步记录，再拉取云端历史写入本地 SQLite。
- */
-export async function syncWithCloud(): Promise<void> {
+/** 上传本地所有未同步记录；单条失败不影响其它记录 */
+export async function pushPendingClips(): Promise<void> {
   const localClips = await window.api.getLocalClips()
 
   for (const clip of localClips) {
@@ -40,6 +38,13 @@ export async function syncWithCloud(): Promise<void> {
       console.warn('[sync] 上传本地记录失败', clip.id, error)
     }
   }
+}
+
+/**
+ * 登录后的全量同步：先上传本地未同步记录，再拉取云端历史写入本地 SQLite。
+ */
+export async function syncWithCloud(): Promise<void> {
+  await pushPendingClips()
 
   const remoteClips = await clipsApi.list()
   for (const item of remoteClips) {
