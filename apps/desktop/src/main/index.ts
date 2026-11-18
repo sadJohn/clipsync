@@ -38,10 +38,26 @@ protocol.registerSchemesAsPrivileged([
   }
 ])
 
+/**
+ * 生产页面的内容安全策略。
+ * 开发态页面由 Vite dev server 提供，不经过 app:// 协议，因此不会影响 HMR。
+ */
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data:",
+  "font-src 'self' data:",
+  "connect-src 'self' https: http://localhost:*",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "frame-ancestors 'none'"
+].join('; ')
+
 function registerAppProtocol(): void {
   const rendererDir = join(__dirname, '../renderer')
 
-  protocol.handle('app', (request) => {
+  protocol.handle('app', async (request) => {
     const { pathname } = new URL(request.url)
     const relativePath = decodeURIComponent(pathname === '/' ? '/index.html' : pathname)
     const filePath = normalize(join(rendererDir, relativePath))
@@ -50,7 +66,18 @@ function registerAppProtocol(): void {
       return new Response('Forbidden', { status: 403 })
     }
 
-    return net.fetch(pathToFileURL(filePath).toString())
+    const response = await net.fetch(pathToFileURL(filePath).toString())
+    if (!filePath.endsWith('.html')) {
+      return response
+    }
+
+    const headers = new Headers(response.headers)
+    headers.set('Content-Security-Policy', CONTENT_SECURITY_POLICY)
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers
+    })
   })
 }
 
