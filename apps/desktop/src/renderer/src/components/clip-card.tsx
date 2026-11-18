@@ -23,6 +23,13 @@ const TYPE_LABELS: Record<ClipType, string> = {
   LINK: '链接'
 }
 
+const TYPE_BADGE_STYLES: Record<ClipType, string> = {
+  TEXT: 'bg-sky-500/15 text-sky-500 border-sky-500/30',
+  CODE: 'bg-violet-500/15 text-violet-500 border-violet-500/30',
+  IMAGE: 'bg-pink-500/15 text-pink-500 border-pink-500/30',
+  LINK: 'bg-amber-500/15 text-amber-500 border-amber-500/30'
+}
+
 function formatTime(iso: string): string {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return ''
@@ -76,7 +83,7 @@ export const ClipCard = memo(function ClipCard({ clip }: ClipCardProps) {
       </p>
 
       <div className="mt-2 flex min-w-0 items-center gap-1.5 text-[10px] text-muted-foreground">
-        <Badge variant="secondary" className="shrink-0 bg-primary/10 text-primary">
+        <Badge variant="outline" className={`shrink-0 ${TYPE_BADGE_STYLES[clip.type]}`}>
           {TYPE_LABELS[clip.type]}
         </Badge>
         <span className="min-w-0 max-w-27.5 truncate">{clip.deviceName}</span>
