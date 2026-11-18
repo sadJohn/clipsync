@@ -1,6 +1,6 @@
 import { DEFAULT_SETTINGS, type LocalClipRecord } from '@clipsync/shared'
 import { create } from 'zustand'
-import { clipsApi } from '@/lib/api'
+import { ApiError, clipsApi } from '@/lib/api'
 import { getAuthToken } from '@/lib/auth-token'
 
 interface ClipState {
@@ -134,7 +134,14 @@ export const useClipStore = create<ClipState>((set, get) => ({
 
     try {
       if (clip.isSynced) {
-        await clipsApi.remove(id)
+        try {
+          await clipsApi.remove(id)
+        } catch (removeError) {
+          // 云端已不存在（如其他设备已删除）视为删除成功，其余错误需要回滚
+          if (!(removeError instanceof ApiError && removeError.status === 404)) {
+            throw removeError
+          }
+        }
       }
       await window.api.deleteLocalClip(id)
     } catch (error) {
