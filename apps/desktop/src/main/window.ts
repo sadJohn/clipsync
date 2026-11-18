@@ -1,5 +1,6 @@
 import { join } from 'node:path'
 import { BrowserWindow, screen, shell } from 'electron'
+import { getSettings } from './services/settings-store'
 
 const WINDOW_WIDTH = 420
 const WINDOW_HEIGHT = 560
@@ -8,6 +9,15 @@ let mainWindow: BrowserWindow | null = null
 let quitting = false
 /** 最近一次因失焦隐藏的时间戳，用于抵消托盘点击时的「失焦先隐藏、点击又显示」竞态 */
 let lastHiddenAt = 0
+/** 失焦隐藏延迟的定时器，重新显示窗口时需要取消 */
+let pendingHide: ReturnType<typeof setTimeout> | null = null
+
+function cancelPendingHide(): void {
+  if (pendingHide) {
+    clearTimeout(pendingHide)
+    pendingHide = null
+  }
+}
 
 /**
  * 创建无边框悬浮窗（常驻置顶、不占任务栏），首次调用后复用同一实例。
@@ -41,11 +51,22 @@ export function createMainWindow(): BrowserWindow {
   win.setAlwaysOnTop(true, 'floating')
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
 
-  // 失焦自动收起（开发者工具打开时除外，方便调试）
+  // 失焦自动收起（开发者工具打开时除外，方便调试），按设置支持延迟隐藏
   win.on('blur', () => {
-    if (!win.isDestroyed() && !win.webContents.isDevToolsOpened()) {
+    if (win.isDestroyed() || win.webContents.isDevToolsOpened()) return
+
+    cancelPendingHide()
+    const { hideDelayMs } = getSettings()
+
+    if (hideDelayMs <= 0) {
       hideWindow()
+      return
     }
+
+    pendingHide = setTimeout(() => {
+      pendingHide = null
+      hideWindow()
+    }, hideDelayMs)
   })
 
   // 关闭按钮只隐藏，常驻托盘
@@ -90,6 +111,7 @@ function positionWindow(win: BrowserWindow): void {
 }
 
 export function showWindow(): void {
+  cancelPendingHide()
   const win = mainWindow && !mainWindow.isDestroyed() ? mainWindow : createMainWindow()
   positionWindow(win)
   win.show()
@@ -97,6 +119,7 @@ export function showWindow(): void {
 }
 
 export function hideWindow(): void {
+  cancelPendingHide()
   if (!mainWindow || mainWindow.isDestroyed() || !mainWindow.isVisible()) {
     return
   }

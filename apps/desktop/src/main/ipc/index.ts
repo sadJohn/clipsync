@@ -4,11 +4,14 @@ import * as authTokenStore from '../services/auth-token-store'
 import { localClipService } from '../services/local-clip-service'
 import * as settingsStore from '../services/settings-store'
 import { openSettingsWindow } from '../services/settings-window'
+import { beginShortcutCapture, endShortcutCapture } from '../services/shortcut-manager'
 import { hideWindow } from '../window'
 
 interface IpcHandlerOptions {
   /** 写回剪贴板后通知 watcher，避免重复入库 */
   onClipboardWrite: (content: string) => void
+  /** 应用设置变更并返回最新设置；副作用失败时抛错，避免无效值落盘 */
+  applySettings: (patch: Partial<Settings>) => Settings
 }
 
 let registered = false
@@ -87,11 +90,22 @@ export function registerIpcHandlers(options: IpcHandlerOptions): void {
     if (!patch || typeof patch !== 'object' || Array.isArray(patch)) {
       throw new Error('设置补丁必须是对象')
     }
-    return settingsStore.setSettings(patch as Partial<Settings>)
+    return options.applySettings(patch as Partial<Settings>)
   })
 
   ipcMain.handle(IpcChannels.SETTINGS_OPEN, () => {
     openSettingsWindow()
+  })
+
+  ipcMain.handle(IpcChannels.SHORTCUT_CAPTURE, (_event, capturing: unknown) => {
+    if (typeof capturing !== 'boolean') {
+      throw new Error('capturing 必须是布尔值')
+    }
+    if (capturing) {
+      beginShortcutCapture()
+    } else {
+      endShortcutCapture()
+    }
   })
 
   ipcMain.handle(IpcChannels.AUTH_TOKEN_GET, () => authTokenStore.getToken())

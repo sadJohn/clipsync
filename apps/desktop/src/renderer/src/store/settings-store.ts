@@ -12,7 +12,10 @@ interface SettingsState {
 function errorMessage(error: unknown): string {
   if (error && typeof error === 'object' && 'message' in error) {
     const message = (error as { message?: unknown }).message
-    if (typeof message === 'string' && message.length > 0) return message
+    if (typeof message === 'string' && message.length > 0) {
+      // 去掉 Electron IPC 包装的 "Error invoking remote method '...': Error:" 前缀
+      return message.replace(/^Error invoking remote method '[^']+': (?:Error: )?/, '')
+    }
   }
   return '设置操作失败，请稍后重试'
 }

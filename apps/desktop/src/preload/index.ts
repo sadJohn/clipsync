@@ -35,6 +35,8 @@ export interface DesktopApi {
   setSettings: (patch: Partial<Settings>) => Promise<Settings>
   /** 打开设置窗口 */
   openSettings: () => Promise<void>
+  /** 进入 / 退出快捷键录制；录制期间主进程会暂停全局快捷键 */
+  setShortcutCapturing: (capturing: boolean) => Promise<void>
   /** 读取主进程加密保存的认证 Token */
   getAuthToken: () => Promise<string | null>
   /** 交由主进程加密保存认证 Token */
@@ -89,6 +91,9 @@ const api: DesktopApi = {
   setSettings: (patch) => ipcRenderer.invoke(IpcChannels.SETTINGS_SET, patch) as Promise<Settings>,
 
   openSettings: () => ipcRenderer.invoke(IpcChannels.SETTINGS_OPEN) as Promise<void>,
+
+  setShortcutCapturing: (capturing) =>
+    ipcRenderer.invoke(IpcChannels.SHORTCUT_CAPTURE, capturing) as Promise<void>,
 
   getAuthToken: () => ipcRenderer.invoke(IpcChannels.AUTH_TOKEN_GET) as Promise<string | null>,
 

@@ -1,11 +1,16 @@
 import { join, normalize } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { IpcChannels } from '@clipsync/shared'
+import { DEFAULT_SETTINGS, IpcChannels, type Settings } from '@clipsync/shared'
 import { app, net, protocol } from 'electron'
 import { closeDb } from './db/client'
 import { registerIpcHandlers } from './ipc'
 import { ClipboardWatcher } from './services/clipboard-watcher'
-import { registerGlobalShortcuts, unregisterGlobalShortcuts } from './services/shortcut-manager'
+import { getSettings, setSettings } from './services/settings-store'
+import {
+  registerGlobalShortcuts,
+  setToggleShortcut,
+  unregisterGlobalShortcuts
+} from './services/shortcut-manager'
 import { openSettingsWindow } from './services/settings-window'
 import { createTrayManager } from './services/tray-manager'
 import {
@@ -50,6 +55,32 @@ function registerAppProtocol(): void {
 
 const watcher = new ClipboardWatcher()
 
+/** 开发态与 Linux 不注册登录项，避免把 Electron 可执行文件加入开机启动 */
+function applyAutoLaunch(enabled: boolean): void {
+  if (!app.isPackaged || process.platform === 'linux') return
+  app.setLoginItemSettings({ openAtLogin: enabled })
+}
+
+/** 应用设置变更；快捷键注册失败会抛错，保证无效值不会落盘 */
+function applySettings(patch: Partial<Settings>): Settings {
+  const current = getSettings()
+
+  if (
+    patch.toggleAccelerator !== undefined &&
+    patch.toggleAccelerator !== current.toggleAccelerator
+  ) {
+    setToggleShortcut(patch.toggleAccelerator)
+  }
+
+  const settings = setSettings(patch)
+
+  if (patch.autoLaunch !== undefined) {
+    applyAutoLaunch(settings.autoLaunch)
+  }
+
+  return settings
+}
+
 const hasSingleInstanceLock = app.requestSingleInstanceLock()
 
 if (!hasSingleInstanceLock) {
@@ -71,7 +102,8 @@ if (!hasSingleInstanceLock) {
     createMainWindow()
 
     registerIpcHandlers({
-      onClipboardWrite: (content) => watcher.markExternalWrite(content)
+      onClipboardWrite: (content) => watcher.markExternalWrite(content),
+      applySettings
     })
 
     watcher.onNewClip((clip) => {
@@ -94,7 +126,15 @@ if (!hasSingleInstanceLock) {
       }
     })
 
-    registerGlobalShortcuts(toggleWindow)
+    const initialSettings = getSettings()
+    applyAutoLaunch(initialSettings.autoLaunch)
+
+    if (!registerGlobalShortcuts(toggleWindow, initialSettings.toggleAccelerator)) {
+      console.warn(
+        `[shortcut] ${initialSettings.toggleAccelerator} 注册失败，回退 ${DEFAULT_SETTINGS.toggleAccelerator}`
+      )
+      registerGlobalShortcuts(toggleWindow, DEFAULT_SETTINGS.toggleAccelerator)
+    }
 
     app.on('activate', () => {
       showWindow()

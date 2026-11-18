@@ -1,4 +1,4 @@
-import type { ClipType } from '@clipsync/shared'
+import { DEFAULT_SETTINGS, type ClipType } from '@clipsync/shared'
 import { Loader2, LogIn, LogOut, Search, Settings } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AuthDialog } from '@/components/auth-dialog'
@@ -40,6 +40,7 @@ export default function App() {
   const [keyword, setKeyword] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
   const [authOpen, setAuthOpen] = useState(false)
+  const [accelerator, setAccelerator] = useState<string>(DEFAULT_SETTINGS.toggleAccelerator)
   const searchRef = useRef<HTMLInputElement>(null)
 
   useCloudSync(authStatus === 'authenticated' ? (user?.id ?? null) : null)
@@ -48,6 +49,19 @@ export default function App() {
     void load()
     void initAuth()
   }, [load, initAuth])
+
+  // 快捷键可在设置窗口修改，窗口重新获得焦点时刷新底部提示
+  useEffect(() => {
+    const refresh = (): void => {
+      void window.api
+        .getSettings()
+        .then((next) => setAccelerator(next.toggleAccelerator))
+        .catch(() => {})
+    }
+    refresh()
+    window.addEventListener('focus', refresh)
+    return () => window.removeEventListener('focus', refresh)
+  }, [])
 
   // 已登录时由 useCloudSync 在拉取云端后清理，避免拉取前误删仍被其他设备使用的记录
   useEffect(() => {
@@ -176,7 +190,7 @@ export default function App() {
         ) : filteredClips.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-1 px-6 text-center text-[11px] text-muted-foreground">
             <p>{keyword ? '没有匹配的记录' : '复制一段文本，就会自动出现在这里'}</p>
-            <p>按 Option+V / Alt+V 随时呼出窗口</p>
+            <p>按 {accelerator} 随时呼出窗口</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2 pb-4">
@@ -188,7 +202,7 @@ export default function App() {
       </ScrollArea>
 
       <footer className="flex items-center justify-between border-t border-border/60 px-4 py-2 text-[10px] text-muted-foreground">
-        <span>Option+V 呼出</span>
+        <span>{accelerator} 呼出</span>
         <span>{clips.length} 条记录</span>
       </footer>
 
