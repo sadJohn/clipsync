@@ -27,7 +27,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Build macOS installers
-        run: pnpm --filter @clipsync/desktop run dist:mac -- --publish never
+        run: pnpm --filter @clipsync/desktop run dist:mac
         env:
           VITE_SERVER_URL: ${{ vars.VITE_SERVER_URL }}
           # 未配置 Apple Developer ID 时跳过签名；配置证书后改为 true 并补充签名 secrets
@@ -60,7 +60,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Build Windows installer
-        run: pnpm --filter @clipsync/desktop run dist:win -- --publish never
+        run: pnpm --filter @clipsync/desktop run dist:win
         env:
           VITE_SERVER_URL: ${{ vars.VITE_SERVER_URL }}
 
