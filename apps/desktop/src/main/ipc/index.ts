@@ -5,6 +5,7 @@ import { localClipService } from '../services/local-clip-service'
 import * as settingsStore from '../services/settings-store'
 import { openSettingsWindow } from '../services/settings-window'
 import { beginShortcutCapture, endShortcutCapture } from '../services/shortcut-manager'
+import { checkForUpdates, getUpdateStatus } from '../services/updater'
 import { hideWindow } from '../window'
 
 interface IpcHandlerOptions {
@@ -107,6 +108,12 @@ export function registerIpcHandlers(options: IpcHandlerOptions): void {
       endShortcutCapture()
     }
   })
+
+  ipcMain.handle(IpcChannels.UPDATE_CHECK, () => {
+    checkForUpdates()
+  })
+
+  ipcMain.handle(IpcChannels.UPDATE_STATUS_GET, () => getUpdateStatus())
 
   ipcMain.handle(IpcChannels.AUTH_TOKEN_GET, () => authTokenStore.getToken())
 

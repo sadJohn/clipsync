@@ -32,6 +32,12 @@ export const IpcChannels = {
   SETTINGS_OPEN: 'settings:open',
   /** 渲染进程 -> 主进程：进入 / 退出快捷键录制（录制期间暂停全局快捷键） */
   SHORTCUT_CAPTURE: 'shortcut:capture',
+  /** 渲染进程 -> 主进程：手动检查更新 */
+  UPDATE_CHECK: 'update:check',
+  /** 渲染进程 -> 主进程：读取当前更新状态 */
+  UPDATE_STATUS_GET: 'update:get-status',
+  /** 主进程 -> 渲染进程：更新状态变化 */
+  UPDATE_STATUS: 'update:status',
   /** 渲染进程 -> 主进程：读取加密保存的认证 Token */
   AUTH_TOKEN_GET: 'auth-token:get',
   /** 渲染进程 -> 主进程：加密保存认证 Token */

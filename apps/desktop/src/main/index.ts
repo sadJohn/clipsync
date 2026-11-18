@@ -13,6 +13,7 @@ import {
 } from './services/shortcut-manager'
 import { openSettingsWindow } from './services/settings-window'
 import { createTrayManager } from './services/tray-manager'
+import { checkForUpdates, initUpdater } from './services/updater'
 import {
   createMainWindow,
   getMainWindow,
@@ -78,6 +79,10 @@ function applySettings(patch: Partial<Settings>): Settings {
     applyAutoLaunch(settings.autoLaunch)
   }
 
+  if (patch.autoUpdate === true) {
+    checkForUpdates()
+  }
+
   return settings
 }
 
@@ -128,6 +133,10 @@ if (!hasSingleInstanceLock) {
 
     const initialSettings = getSettings()
     applyAutoLaunch(initialSettings.autoLaunch)
+    initUpdater()
+    if (initialSettings.autoUpdate && app.isPackaged) {
+      checkForUpdates()
+    }
 
     if (!registerGlobalShortcuts(toggleWindow, initialSettings.toggleAccelerator)) {
       console.warn(

@@ -1,3 +1,4 @@
+import type { UpdateStatus } from '@clipsync/shared'
 import { Loader2 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
@@ -12,6 +13,30 @@ const HIDE_DELAY_OPTIONS = [
   { value: 3000, label: '3 秒' },
   { value: 5000, label: '5 秒' }
 ] as const
+
+/** 更新状态对应的说明文案 */
+function updateMessage(status: UpdateStatus | null): string {
+  if (!status) return ''
+
+  switch (status.state) {
+    case 'checking':
+      return '正在检查更新…'
+    case 'available':
+      return status.version ? `发现新版本 ${status.version}，正在下载…` : '发现新版本，正在下载…'
+    case 'downloading':
+      return `正在下载新版本${status.version ? ` ${status.version}` : ''}（${status.percent ?? 0}%）`
+    case 'downloaded':
+      return `新版本${status.version ? ` ${status.version}` : ''} 已下载，退出应用后自动安装`
+    case 'up-to-date':
+      return '当前已是最新版本'
+    case 'error':
+      return `检查更新失败：${status.message ?? '未知错误'}`
+    case 'unsupported':
+      return status.message ?? '当前运行方式不支持检查更新'
+    default:
+      return ''
+  }
+}
 
 const MODIFIER_CODES = new Set([
   'ShiftLeft',
@@ -181,10 +206,22 @@ export default function SettingsPage() {
   const user = useAuthStore((state) => state.user)
   const initAuth = useAuthStore((state) => state.init)
 
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null)
+
+  useEffect(() => {
+    void window.api
+      .getUpdateStatus()
+      .then(setUpdateStatus)
+      .catch(() => {})
+    return window.api.onUpdateStatus(setUpdateStatus)
+  }, [])
+
   useEffect(() => {
     void loadSettings()
     void initAuth()
   }, [loadSettings, initAuth])
+
+  const updateText = updateMessage(updateStatus)
 
   return (
     <div className="flex h-screen flex-col bg-background">
@@ -264,6 +301,43 @@ export default function SettingsPage() {
           </TabsContent>
 
           <TabsContent value="about" className="flex flex-col gap-3">
+            <section className="divide-y divide-border/60 rounded-lg border border-border/60 bg-card/40">
+              <SettingsRow label="自动更新" description="启动时自动检查并下载新版本">
+                <Switch
+                  checked={settings.autoUpdate}
+                  onCheckedChange={(checked) => void update({ autoUpdate: checked })}
+                />
+              </SettingsRow>
+
+              <SettingsRow
+                label="检查更新"
+                description={`当前版本 v${updateStatus?.currentVersion ?? '—'}`}
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={
+                    updateStatus?.state === 'checking' || updateStatus?.state === 'downloading'
+                  }
+                  onClick={() => void window.api.checkForUpdates()}
+                >
+                  {updateStatus?.state === 'checking' ? '检查中…' : '检查更新'}
+                </Button>
+              </SettingsRow>
+            </section>
+
+            {updateText ? (
+              <p
+                className={
+                  updateStatus?.state === 'error'
+                    ? 'text-[11px] text-destructive'
+                    : 'text-[11px] text-muted-foreground'
+                }
+              >
+                {updateText}
+              </p>
+            ) : null}
+
             <section className="rounded-lg border border-border/60 bg-card/40 p-4">
               <p className="text-xs font-medium">ClipSync</p>
               <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">

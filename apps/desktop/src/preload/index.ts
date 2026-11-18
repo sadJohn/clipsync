@@ -2,7 +2,8 @@ import {
   IpcChannels,
   type ExpiredClipRef,
   type LocalClipRecord,
-  type Settings
+  type Settings,
+  type UpdateStatus
 } from '@clipsync/shared'
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 
@@ -37,6 +38,12 @@ export interface DesktopApi {
   openSettings: () => Promise<void>
   /** 进入 / 退出快捷键录制；录制期间主进程会暂停全局快捷键 */
   setShortcutCapturing: (capturing: boolean) => Promise<void>
+  /** 手动检查更新 */
+  checkForUpdates: () => Promise<void>
+  /** 读取当前更新状态 */
+  getUpdateStatus: () => Promise<UpdateStatus>
+  /** 订阅更新状态变化，返回取消订阅函数 */
+  onUpdateStatus: (callback: (status: UpdateStatus) => void) => () => void
   /** 读取主进程加密保存的认证 Token */
   getAuthToken: () => Promise<string | null>
   /** 交由主进程加密保存认证 Token */
@@ -94,6 +101,20 @@ const api: DesktopApi = {
 
   setShortcutCapturing: (capturing) =>
     ipcRenderer.invoke(IpcChannels.SHORTCUT_CAPTURE, capturing) as Promise<void>,
+
+  checkForUpdates: () => ipcRenderer.invoke(IpcChannels.UPDATE_CHECK) as Promise<void>,
+
+  getUpdateStatus: () => ipcRenderer.invoke(IpcChannels.UPDATE_STATUS_GET) as Promise<UpdateStatus>,
+
+  onUpdateStatus: (callback) => {
+    const listener = (_event: IpcRendererEvent, status: UpdateStatus): void => {
+      callback(status)
+    }
+    ipcRenderer.on(IpcChannels.UPDATE_STATUS, listener)
+    return () => {
+      ipcRenderer.removeListener(IpcChannels.UPDATE_STATUS, listener)
+    }
+  },
 
   getAuthToken: () => ipcRenderer.invoke(IpcChannels.AUTH_TOKEN_GET) as Promise<string | null>,
 

@@ -39,6 +39,8 @@ jobs:
           files: |
             apps/desktop/release/*.dmg
             apps/desktop/release/*.zip
+            apps/desktop/release/*.blockmap
+            apps/desktop/release/*.yml
           generate_release_notes: true
 
   build-win:
@@ -67,4 +69,6 @@ jobs:
         with:
           files: |
             apps/desktop/release/*.exe
+            apps/desktop/release/*.blockmap
+            apps/desktop/release/*.yml
           generate_release_notes: true

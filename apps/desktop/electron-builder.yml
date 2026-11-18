@@ -19,6 +19,12 @@ asarUnpack:
 
 npmRebuild: true
 
+# electron-updater 通过 GitHub Releases 的 latest*.yml 元数据检查更新
+publish:
+  provider: github
+  owner: sadJohn
+  repo: clipsync
+
 mac:
   category: public.app-category.productivity
   icon: resources/icon-1024.png
