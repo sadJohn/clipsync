@@ -121,15 +121,22 @@ export const useClipStore = create<ClipState>((set, get) => ({
 
   removeClip: async (id) => {
     const clip = get().clips.find((item) => item.id === id)
-    if (clip?.isSynced) {
-      try {
-        await clipsApi.remove(id)
-      } catch (error) {
-        console.warn('[clip] 云端删除失败', error)
-      }
-    }
-    await window.api.deleteLocalClip(id)
+    if (!clip) return
+
+    // 乐观更新：立即从 UI 移除
     get().removeLocal(id)
+
+    try {
+      if (clip.isSynced) {
+        await clipsApi.remove(id)
+      }
+      await window.api.deleteLocalClip(id)
+    } catch (error) {
+      // 回滚：恢复被移除的记录
+      console.warn('[clip] 删除失败，恢复记录', error)
+      get().upsertClip(clip)
+      throw error
+    }
   },
 
   removeLocal: (id) => {

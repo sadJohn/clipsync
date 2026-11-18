@@ -134,7 +134,10 @@ export const ClipCard = memo(function ClipCard({ clip }: ClipCardProps) {
             setConfirmOpen(true)
             return
           }
-          void removeClip(clip.id)
+          void removeClip(clip.id).catch((error: unknown) => {
+            console.warn('[clip] 删除失败', error)
+            toast.error('删除失败，请重试')
+          })
         }}
       >
         <Trash2 className="size-3.5" />
@@ -160,7 +163,10 @@ export const ClipCard = memo(function ClipCard({ clip }: ClipCardProps) {
                 variant="destructive"
                 onClick={() => {
                   setConfirmOpen(false)
-                  void removeClip(clip.id)
+                  void removeClip(clip.id).catch((error: unknown) => {
+                    console.warn('[clip] 删除失败', error)
+                    toast.error('删除失败，请重试')
+                  })
                 }}
               >
                 删除
