@@ -1,5 +1,6 @@
 import { DEFAULT_SETTINGS, type ClipType, type Theme } from '@clipsync/shared'
 import { Loader2, LogIn, LogOut, Search, Settings } from 'lucide-react'
+import { AnimatePresence } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AuthDialog } from '@/components/auth-dialog'
 import { ClipCard } from '@/components/clip-card'
@@ -211,9 +212,11 @@ export default function App() {
           </div>
         ) : (
           <div className="flex flex-col gap-2 pb-4">
-            {filteredClips.map((clip) => (
-              <ClipCard key={clip.id} clip={clip} />
-            ))}
+            <AnimatePresence initial={false} mode="popLayout">
+              {filteredClips.map((clip) => (
+                <ClipCard key={clip.id} clip={clip} />
+              ))}
+            </AnimatePresence>
           </div>
         )}
       </ScrollArea>

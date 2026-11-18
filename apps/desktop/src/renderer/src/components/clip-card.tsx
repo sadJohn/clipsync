@@ -1,5 +1,6 @@
 import type { ClipType, LocalClipRecord } from '@clipsync/shared'
 import { Cloud, CloudOff, Pin, Trash2 } from 'lucide-react'
+import { motion } from 'motion/react'
 import { memo, useState } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -65,9 +66,14 @@ export const ClipCard = memo(function ClipCard({ clip }: ClipCardProps) {
   }
 
   return (
-    <div
+    <motion.div
+      layout
       role="button"
       tabIndex={0}
+      initial={{ opacity: 0, y: -8, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15, ease: 'easeOut' } }}
+      transition={{ type: 'spring', stiffness: 420, damping: 34, mass: 0.7 }}
       onClick={() => void handleCopy()}
       onKeyDown={(event) => {
         if (event.target !== event.currentTarget) return
@@ -182,6 +188,6 @@ export const ClipCard = memo(function ClipCard({ clip }: ClipCardProps) {
           </DialogContent>
         </Dialog>
       ) : null}
-    </div>
+    </motion.div>
   )
 })
