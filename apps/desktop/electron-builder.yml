@@ -37,6 +37,8 @@ dmg:
 
 win:
   icon: resources/icon-1024.png
+  # 默认名含空格，GitHub 上传时会把空格转成点，导致 latest.yml 里的地址 404
+  artifactName: ${productName}-Setup-${version}.${ext}
   target:
     - target: nsis
 
