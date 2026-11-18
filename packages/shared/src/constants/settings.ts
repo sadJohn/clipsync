@@ -9,5 +9,6 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = {
   maxClips: 500,
   expireDays: 30,
   autoSyncNewClip: true,
-  theme: 'system'
+  theme: 'system',
+  language: 'system'
 }

@@ -1,5 +1,6 @@
 import { DEFAULT_SETTINGS, type Settings } from '@clipsync/shared'
 import { create } from 'zustand'
+import i18n from '@/i18n'
 import { getAuthToken } from '@/lib/auth-token'
 import { purgeExpiredClips, pushPendingClips } from '@/lib/clip-sync'
 import { notifySyncError } from '@/lib/sync-notice'
@@ -20,7 +21,7 @@ function errorMessage(error: unknown): string {
       return message.replace(/^Error invoking remote method '[^']+': (?:Error: )?/, '')
     }
   }
-  return '设置操作失败，请稍后重试'
+  return i18n.t('settings.saveFailed')
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
@@ -56,7 +57,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       if (patch.autoSyncNewClip === true && getAuthToken()) {
         void pushPendingClips().catch((syncError: unknown) => {
           console.warn('[sync] 补传未同步记录失败', syncError)
-          notifySyncError('补传本地记录失败，请稍后重试')
+          notifySyncError(i18n.t('settings.pushPendingFailed'))
         })
       }
     } catch (error) {

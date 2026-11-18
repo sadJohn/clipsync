@@ -11,8 +11,8 @@ import {
   setToggleShortcut,
   unregisterGlobalShortcuts
 } from './services/shortcut-manager'
-import { openSettingsWindow } from './services/settings-window'
-import { createTrayManager } from './services/tray-manager'
+import { openSettingsWindow, updateSettingsWindowTitle } from './services/settings-window'
+import { createTrayManager, type TrayController } from './services/tray-manager'
 import { checkForUpdates, initUpdater } from './services/updater'
 import {
   createMainWindow,
@@ -83,6 +83,9 @@ function registerAppProtocol(): void {
 
 const watcher = new ClipboardWatcher()
 
+/** 托盘在 app ready 后创建，设置变更时需要据此同步菜单语言 */
+let trayController: TrayController | null = null
+
 /** 开发态与 Linux 不注册登录项，避免把 Electron 可执行文件加入开机启动 */
 function applyAutoLaunch(enabled: boolean): void {
   if (!app.isPackaged || process.platform === 'linux') return
@@ -101,6 +104,11 @@ function applySettings(patch: Partial<Settings>): Settings {
   }
 
   const settings = setSettings(patch)
+
+  if (patch.language !== undefined) {
+    trayController?.updateLanguage(settings.language)
+    updateSettingsWindowTitle(settings.language)
+  }
 
   if (patch.autoLaunch !== undefined) {
     applyAutoLaunch(settings.autoLaunch)
@@ -145,8 +153,9 @@ if (!hasSingleInstanceLock) {
       }
     })
     void watcher.start()
-    createTrayManager({
+    trayController = createTrayManager({
       iconPath: join(__dirname, '../../resources/icon.png'),
+      language: getSettings().language,
       onTrayClick: toggleWindowFromTray,
       onToggle: toggleWindow,
       onOpenSettings: () => {

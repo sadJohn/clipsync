@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { DEFAULT_SETTINGS, THEMES, type Settings } from '@clipsync/shared'
+import { DEFAULT_SETTINGS, LANGS, THEMES, type Settings } from '@clipsync/shared'
 import { app } from 'electron'
 
 /**
@@ -39,6 +39,10 @@ function mergeSettings(raw: unknown): Settings {
 
   if (!THEMES.includes(merged.theme)) {
     merged.theme = DEFAULT_SETTINGS.theme
+  }
+
+  if (!LANGS.includes(merged.language)) {
+    merged.language = DEFAULT_SETTINGS.language
   }
 
   return merged

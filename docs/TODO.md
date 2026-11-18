@@ -88,16 +88,26 @@
 
 ---
 
-## 三期：账号 + 远期
+## 三期：国际化 ✅
 
-14. **账号设置**
+14. **中英文切换** ✅
+    - Settings 字段：`language: 'system' | 'zh-CN' | 'en-US'`（默认 `'system'`）
+    - 依赖 `i18next` + `react-i18next`，语言包在 `src/renderer/src/i18n/`
+    - `system` 时渲染进程用 `navigator.language`、主进程用 `app.getLocale()` 解析
+    - 设置页「通用」可切换；托盘菜单、tooltip 与设置窗口标题随语言变化重建
+
+---
+
+## 四期：账号 + 远期
+
+15. **账号设置**
     - 改昵称：Better Auth `updateUser()` ✅ 默认支持
     - 改密码：Better Auth `changePassword()` ✅ 默认支持
     - 退出登录：已有 signOut
     - 删除账号：需加 `account-deletion` 插件
     - 改邮箱 / 忘记密码：需加 `email-verification` 插件（发验证邮件）—— 远期
 
-15. **跳过特定应用的剪贴板**（远期）
+16. **跳过特定应用的剪贴板**（远期）
     - 主进程 `ClipboardWatcher` 需读当前前台 app bundle id
     - macOS：`NSWorkspace`（ObjC bridge 或 electron 原生能力）
     - Windows：需另查方式

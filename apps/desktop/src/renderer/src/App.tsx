@@ -2,6 +2,7 @@ import { DEFAULT_SETTINGS, type ClipType, type Theme } from '@clipsync/shared'
 import { Loader2, LogIn, LogOut, Search, Settings } from 'lucide-react'
 import { AnimatePresence } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AuthDialog } from '@/components/auth-dialog'
 import { ClipCard } from '@/components/clip-card'
 import { Button } from '@/components/ui/button'
@@ -10,6 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Toaster } from '@/components/ui/sonner'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useCloudSync } from '@/hooks/use-cloud-sync'
+import { applyLanguage } from '@/i18n'
 import { getAuthToken } from '@/lib/auth-token'
 import { pushClip, purgeExpiredClips } from '@/lib/clip-sync'
 import { notifySyncError } from '@/lib/sync-notice'
@@ -29,6 +31,7 @@ function runCleanup(): void {
 }
 
 export default function App() {
+  const { t } = useTranslation()
   const clips = useClipStore((state) => state.clips)
   const loading = useClipStore((state) => state.loading)
   const error = useClipStore((state) => state.error)
@@ -62,6 +65,7 @@ export default function App() {
           setAccelerator(next.toggleAccelerator)
           setTheme(next.theme)
           applyTheme(next.theme)
+          applyLanguage(next.language)
           applyMaxClips(next.maxClips)
         })
         .catch(() => {})
@@ -97,7 +101,7 @@ export default function App() {
           await pushClip(clip)
         } catch (syncError) {
           console.warn('[sync] 新条目上传失败', syncError)
-          notifySyncError('新剪贴板内容同步失败')
+          notifySyncError(t('app.syncFailed'))
         }
       })()
     })
@@ -120,7 +124,7 @@ export default function App() {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('focus', onFocus)
     }
-  }, [addClip])
+  }, [addClip, t])
 
   const filteredClips = useMemo(() => {
     const query = keyword.trim().toLowerCase()
@@ -140,7 +144,7 @@ export default function App() {
         <div>
           <h1 className="text-[15px] font-semibold tracking-tight">ClipSync</h1>
           <p className="mt-0.5 text-[10px] text-muted-foreground">
-            {authStatus === 'authenticated' && user ? user.email : '本地模式 · 登录后多设备同步'}
+            {authStatus === 'authenticated' && user ? user.email : t('app.localMode')}
           </p>
         </div>
 
@@ -153,19 +157,19 @@ export default function App() {
               onClick={() => void signOut()}
             >
               <LogOut className="size-3.5" />
-              退出
+              {t('app.logout')}
             </Button>
           ) : (
             <Button size="sm" onClick={() => setAuthOpen(true)}>
               <LogIn className="size-3.5" />
-              登录
+              {t('app.login')}
             </Button>
           )}
           <Button
             variant="ghost"
             size="icon"
             className="size-8 text-muted-foreground"
-            title="设置"
+            title={t('app.settings')}
             onClick={() => void window.api.openSettings()}
           >
             <Settings className="size-3.5" />
@@ -180,7 +184,7 @@ export default function App() {
             ref={searchRef}
             value={keyword}
             autoFocus
-            placeholder="搜索剪贴板内容…"
+            placeholder={t('app.searchPlaceholder')}
             className="h-8 pl-8 text-xs"
             onChange={(event) => setKeyword(event.target.value)}
           />
@@ -190,10 +194,10 @@ export default function App() {
       <div className="px-4 pb-2">
         <Tabs value={filter} onValueChange={(value) => setFilter(value as Filter)}>
           <TabsList className="w-full">
-            <TabsTrigger value="all">全部</TabsTrigger>
-            <TabsTrigger value="TEXT">文本</TabsTrigger>
-            <TabsTrigger value="CODE">代码</TabsTrigger>
-            <TabsTrigger value="LINK">链接</TabsTrigger>
+            <TabsTrigger value="all">{t('filters.all')}</TabsTrigger>
+            <TabsTrigger value="TEXT">{t('filters.text')}</TabsTrigger>
+            <TabsTrigger value="CODE">{t('filters.code')}</TabsTrigger>
+            <TabsTrigger value="LINK">{t('filters.link')}</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -207,8 +211,8 @@ export default function App() {
           </div>
         ) : filteredClips.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-1 px-6 text-center text-[11px] text-muted-foreground">
-            <p>{keyword ? '没有匹配的记录' : '复制一段文本，就会自动出现在这里'}</p>
-            <p>按 {accelerator} 随时呼出窗口</p>
+            <p>{keyword ? t('app.emptyNoMatch') : t('app.emptyHint')}</p>
+            <p>{t('app.emptyShortcut', { accelerator })}</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2 pb-4">
@@ -222,8 +226,8 @@ export default function App() {
       </ScrollArea>
 
       <footer className="flex items-center justify-between border-t border-border/60 px-4 py-2 text-[10px] text-muted-foreground">
-        <span>{accelerator} 呼出</span>
-        <span>{clips.length} 条记录</span>
+        <span>{t('app.footerShortcut', { accelerator })}</span>
+        <span>{t('app.footerCount', { count: clips.length })}</span>
       </footer>
 
       <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />

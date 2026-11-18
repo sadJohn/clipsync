@@ -1,6 +1,9 @@
 import { join } from 'node:path'
+import type { Language } from '@clipsync/shared'
 import { app, BrowserWindow, shell } from 'electron'
+import { mainMessages } from '../i18n'
 import { loadRenderer } from '../window'
+import { getSettings } from './settings-store'
 
 const WINDOW_WIDTH = 560
 const WINDOW_HEIGHT = 640
@@ -23,7 +26,7 @@ export function openSettingsWindow(): BrowserWindow {
     width: WINDOW_WIDTH,
     height: WINDOW_HEIGHT,
     show: false,
-    title: 'ClipSync 设置',
+    title: mainMessages(getSettings().language).settingsWindowTitle,
     resizable: true,
     maximizable: false,
     fullscreenable: false,
@@ -62,4 +65,11 @@ export function openSettingsWindow(): BrowserWindow {
   loadRenderer(win, '#/settings')
   settingsWindow = win
   return win
+}
+
+/** 语言变化后同步窗口标题 */
+export function updateSettingsWindowTitle(language: Language): void {
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.setTitle(mainMessages(language).settingsWindowTitle)
+  }
 }

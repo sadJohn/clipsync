@@ -1,4 +1,5 @@
 import type { ClipItemDto, LocalClipRecord } from '@clipsync/shared'
+import i18n from '@/i18n'
 import { enqueueClipTask, useClipStore } from '@/store/clip-store'
 import { ApiError, clipsApi } from './api'
 import { getAuthToken } from './auth-token'
@@ -43,7 +44,7 @@ export async function pushPendingClips(): Promise<void> {
   }
 
   if (failed > 0) {
-    notifySyncError(`${failed} 条本地记录同步失败，请稍后重试`)
+    notifySyncError(i18n.t('errors.syncFailedCount', { count: failed }))
   }
 }
 

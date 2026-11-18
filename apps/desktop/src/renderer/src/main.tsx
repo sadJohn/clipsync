@@ -2,6 +2,7 @@ import { DEFAULT_SETTINGS } from '@clipsync/shared'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import { applyLanguage } from './i18n'
 import { hydrateAuthToken } from './lib/auth-token'
 import { applyTheme } from './lib/theme'
 import SettingsPage from './pages/settings-page'
@@ -50,9 +51,11 @@ async function bootstrap(): Promise<void> {
   try {
     const settings = await window.api.getSettings()
     applyTheme(settings.theme)
+    applyLanguage(settings.language)
   } catch (error) {
     console.warn('[theme] 设置读取失败，使用默认主题', error)
     applyTheme(DEFAULT_SETTINGS.theme)
+    applyLanguage(DEFAULT_SETTINGS.language)
   }
 
   try {

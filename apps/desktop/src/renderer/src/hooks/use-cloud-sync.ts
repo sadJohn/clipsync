@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import i18n from '@/i18n'
 import { getAuthToken } from '@/lib/auth-token'
 import { purgeExpiredClips, syncWithCloud } from '@/lib/clip-sync'
 import { connectSyncSocket } from '@/lib/socket'
@@ -63,7 +64,7 @@ export function useCloudSync(userId: string | null): void {
         await syncWithCloud()
       } catch (error: unknown) {
         console.warn('[sync] 云同步失败', error)
-        notifySyncError('云端同步失败，请检查网络后重试')
+        notifySyncError(i18n.t('errors.cloudSyncFailed'))
       }
       try {
         await purgeExpiredClips()

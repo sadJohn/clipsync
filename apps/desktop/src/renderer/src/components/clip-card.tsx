@@ -2,6 +2,7 @@ import type { ClipType, LocalClipRecord } from '@clipsync/shared'
 import { Cloud, CloudOff, Pin, Trash2 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { memo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,12 +18,12 @@ import { clipsApi } from '@/lib/api'
 import { getAuthToken } from '@/lib/auth-token'
 import { useClipStore } from '@/store/clip-store'
 
-const TYPE_LABELS: Record<ClipType, string> = {
-  TEXT: '文本',
-  CODE: '代码',
-  IMAGE: '图片',
-  LINK: '链接'
-}
+const TYPE_LABEL_KEYS = {
+  TEXT: 'clipTypes.TEXT',
+  CODE: 'clipTypes.CODE',
+  IMAGE: 'clipTypes.IMAGE',
+  LINK: 'clipTypes.LINK'
+} as const
 
 const TYPE_BADGE_STYLES: Record<ClipType, string> = {
   TEXT: 'bg-sky-500/15 text-sky-500 border-sky-500/30',
@@ -31,10 +32,10 @@ const TYPE_BADGE_STYLES: Record<ClipType, string> = {
   LINK: 'bg-amber-500/15 text-amber-500 border-amber-500/30'
 }
 
-function formatTime(iso: string): string {
+function formatTime(iso: string, locale: string): string {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return ''
-  return date.toLocaleString('zh-CN', {
+  return date.toLocaleString(locale, {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
@@ -50,6 +51,7 @@ interface ClipCardProps {
  * 列表项按 clip 引用比较；store 更新时未变化的条目引用保持不变，可直接跳过重渲染。
  */
 export const ClipCard = memo(function ClipCard({ clip }: ClipCardProps) {
+  const { t, i18n } = useTranslation()
   const removeClip = useClipStore((state) => state.removeClip)
   const togglePin = useClipStore((state) => state.togglePin)
   const isPinning = useClipStore((state) => state.pinningIds.has(clip.id))
@@ -90,21 +92,21 @@ export const ClipCard = memo(function ClipCard({ clip }: ClipCardProps) {
 
       <div className="mt-2 flex min-w-0 items-center gap-1.5 text-[10px] text-muted-foreground">
         <Badge variant="outline" className={`shrink-0 ${TYPE_BADGE_STYLES[clip.type]}`}>
-          {TYPE_LABELS[clip.type]}
+          {t(TYPE_LABEL_KEYS[clip.type])}
         </Badge>
         <span className="min-w-0 max-w-27.5 truncate">{clip.deviceName}</span>
         <span>·</span>
-        <span>{formatTime(clip.createdAt)}</span>
+        <span>{formatTime(clip.createdAt, i18n.language)}</span>
         <span className="ml-auto flex shrink-0 items-center gap-1">
           {clip.isSynced ? (
             <>
               <Cloud className="size-3 text-emerald-400" />
-              已同步
+              {t('clip.synced')}
             </>
           ) : (
             <>
               <CloudOff className="size-3" />
-              仅本地
+              {t('clip.localOnly')}
             </>
           )}
         </span>
@@ -114,8 +116,8 @@ export const ClipCard = memo(function ClipCard({ clip }: ClipCardProps) {
         type="button"
         variant="ghost"
         size="icon"
-        title={clip.isPinned ? '取消置顶' : '置顶记录'}
-        aria-label="置顶记录"
+        title={clip.isPinned ? t('clip.unpin') : t('clip.pin')}
+        aria-label={t('clip.pin')}
         aria-pressed={clip.isPinned}
         disabled={isPinning}
         className={`absolute top-2 right-8 size-6 transition-opacity focus-visible:opacity-100 ${
@@ -127,7 +129,7 @@ export const ClipCard = memo(function ClipCard({ clip }: ClipCardProps) {
           event.stopPropagation()
           void togglePin(clip.id).catch((error: unknown) => {
             console.warn('[clip] 置顶操作失败', error)
-            toast.error('置顶操作失败，请重试')
+            toast.error(t('clip.pinFailed'))
           })
         }}
       >
@@ -138,8 +140,8 @@ export const ClipCard = memo(function ClipCard({ clip }: ClipCardProps) {
         type="button"
         variant="ghost"
         size="icon"
-        title="删除记录"
-        aria-label="删除记录"
+        title={t('clip.delete')}
+        aria-label={t('clip.delete')}
         className="absolute top-2 right-2 size-6 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
         onClick={(event) => {
           event.stopPropagation()
@@ -149,7 +151,7 @@ export const ClipCard = memo(function ClipCard({ clip }: ClipCardProps) {
           }
           void removeClip(clip.id).catch((error: unknown) => {
             console.warn('[clip] 删除失败', error)
-            toast.error('删除失败，请重试')
+            toast.error(t('clip.deleteFailed'))
           })
         }}
       >
@@ -164,12 +166,12 @@ export const ClipCard = memo(function ClipCard({ clip }: ClipCardProps) {
             onClick={(event) => event.stopPropagation()}
           >
             <DialogHeader>
-              <DialogTitle>删除置顶记录？</DialogTitle>
-              <DialogDescription>删除后无法恢复，并会同步从云端及其他设备移除。</DialogDescription>
+              <DialogTitle>{t('clip.confirmDeleteTitle')}</DialogTitle>
+              <DialogDescription>{t('clip.confirmDeleteDescription')}</DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setConfirmOpen(false)}>
-                取消
+                {t('clip.cancel')}
               </Button>
               <Button
                 type="button"
@@ -178,11 +180,11 @@ export const ClipCard = memo(function ClipCard({ clip }: ClipCardProps) {
                   setConfirmOpen(false)
                   void removeClip(clip.id).catch((error: unknown) => {
                     console.warn('[clip] 删除失败', error)
-                    toast.error('删除失败，请重试')
+                    toast.error(t('clip.deleteFailed'))
                   })
                 }}
               >
-                删除
+                {t('clip.delete')}
               </Button>
             </DialogFooter>
           </DialogContent>

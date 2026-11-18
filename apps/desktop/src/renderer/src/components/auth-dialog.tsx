@@ -1,4 +1,5 @@
 import { useState, type SubmitEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,6 +19,7 @@ interface AuthDialogProps {
 }
 
 export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
+  const { t } = useTranslation()
   const signIn = useAuthStore((state) => state.signIn)
   const signUp = useAuthStore((state) => state.signUp)
 
@@ -35,17 +37,17 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
     try {
       if (mode === 'login') {
         await signIn(email.trim(), password)
-        toast.success('登录成功')
+        toast.success(t('auth.signInSuccess'))
       } else {
         await signUp(name.trim(), email.trim(), password)
-        toast.success('注册成功，已自动登录')
+        toast.success(t('auth.signUpSuccess'))
       }
       setName('')
       setEmail('')
       setPassword('')
       onOpenChange(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '操作失败')
+      toast.error(error instanceof Error ? error.message : t('auth.actionFailed'))
     } finally {
       setSubmitting(false)
     }
@@ -55,16 +57,16 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-85">
         <DialogHeader>
-          <DialogTitle>{mode === 'login' ? '登录 ClipSync' : '创建账号'}</DialogTitle>
-          <DialogDescription>
-            登录后本地记录会自动同步到云端，并在多台设备间实时推送。
-          </DialogDescription>
+          <DialogTitle>
+            {mode === 'login' ? t('auth.signInTitle') : t('auth.signUpTitle')}
+          </DialogTitle>
+          <DialogDescription>{t('auth.description')}</DialogDescription>
         </DialogHeader>
 
         <Tabs value={mode} onValueChange={(value) => setMode(value as 'login' | 'register')}>
           <TabsList className="w-full">
-            <TabsTrigger value="login">登录</TabsTrigger>
-            <TabsTrigger value="register">注册</TabsTrigger>
+            <TabsTrigger value="login">{t('auth.signInTab')}</TabsTrigger>
+            <TabsTrigger value="register">{t('auth.signUpTab')}</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -72,7 +74,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
           {mode === 'register' ? (
             <Input
               value={name}
-              placeholder="昵称"
+              placeholder={t('auth.namePlaceholder')}
               autoComplete="nickname"
               required
               onChange={(event) => setName(event.target.value)}
@@ -81,7 +83,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
           <Input
             type="email"
             value={email}
-            placeholder="邮箱"
+            placeholder={t('auth.emailPlaceholder')}
             autoComplete="email"
             required
             onChange={(event) => setEmail(event.target.value)}
@@ -89,14 +91,18 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
           <Input
             type="password"
             value={password}
-            placeholder="密码（至少 8 位）"
+            placeholder={t('auth.passwordPlaceholder')}
             autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
             minLength={8}
             required
             onChange={(event) => setPassword(event.target.value)}
           />
           <Button type="submit" className="mt-1 w-full" disabled={submitting}>
-            {submitting ? '请稍候…' : mode === 'login' ? '登录' : '注册并登录'}
+            {submitting
+              ? t('auth.submitting')
+              : mode === 'login'
+                ? t('auth.submitSignIn')
+                : t('auth.submitSignUp')}
           </Button>
         </form>
       </DialogContent>

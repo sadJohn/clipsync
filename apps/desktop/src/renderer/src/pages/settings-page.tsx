@@ -1,60 +1,53 @@
-import type { Theme, UpdateStatus } from '@clipsync/shared'
+import type { Language, Theme, UpdateStatus } from '@clipsync/shared'
+import type { TFunction } from 'i18next'
 import { Loader2 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/sonner'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { applyLanguage } from '@/i18n'
 import { applyTheme } from '@/lib/theme'
 import { useAuthStore } from '@/store/auth-store'
 import { useSettingsStore } from '@/store/settings-store'
 
-const HIDE_DELAY_OPTIONS = [
-  { value: 0, label: '立即' },
-  { value: 1000, label: '1 秒' },
-  { value: 3000, label: '3 秒' },
-  { value: 5000, label: '5 秒' }
-] as const
+const HIDE_DELAY_VALUES = [0, 1000, 3000, 5000] as const
 
-const MAX_CLIPS_OPTIONS = [
-  { value: 200, label: '200' },
-  { value: 500, label: '500' },
-  { value: 1000, label: '1000' },
-  { value: 2000, label: '2000' }
-] as const
+const MAX_CLIPS_VALUES = [200, 500, 1000, 2000] as const
 
-const EXPIRE_DAYS_OPTIONS = [
-  { value: 0, label: '永不' },
-  { value: 7, label: '7 天' },
-  { value: 30, label: '30 天' },
-  { value: 90, label: '90 天' }
-] as const
-
-const THEME_OPTIONS = [
-  { value: 'system', label: '跟随系统' },
-  { value: 'light', label: '浅色' },
-  { value: 'dark', label: '深色' }
-] as const
+const EXPIRE_DAYS_VALUES = [0, 7, 30, 90] as const
 
 /** 更新状态对应的说明文案 */
-function updateMessage(status: UpdateStatus | null): string {
+function updateMessage(t: TFunction<'translation'>, status: UpdateStatus | null): string {
   if (!status) return ''
 
   switch (status.state) {
     case 'checking':
-      return '正在检查更新…'
+      return t('settings.update.checking')
     case 'available':
-      return status.version ? `发现新版本 ${status.version}，正在下载…` : '发现新版本，正在下载…'
+      return status.version
+        ? t('settings.update.available', { version: status.version })
+        : t('settings.update.availableNoVersion')
     case 'downloading':
-      return `正在下载新版本${status.version ? ` ${status.version}` : ''}（${status.percent ?? 0}%）`
+      return status.version
+        ? t('settings.update.downloadingWithVersion', {
+            version: status.version,
+            percent: status.percent ?? 0
+          })
+        : t('settings.update.downloading', { percent: status.percent ?? 0 })
     case 'downloaded':
-      return `新版本${status.version ? ` ${status.version}` : ''} 已下载，退出应用后自动安装`
+      return status.version
+        ? t('settings.update.downloadedWithVersion', { version: status.version })
+        : t('settings.update.downloaded')
     case 'up-to-date':
-      return '当前已是最新版本'
+      return t('settings.update.upToDate')
     case 'error':
-      return `检查更新失败：${status.message ?? '未知错误'}`
+      return status.message
+        ? t('settings.update.error', { message: status.message })
+        : t('settings.update.errorUnknown')
     case 'unsupported':
-      return status.message ?? '当前运行方式不支持检查更新'
+      return t('settings.update.unsupported')
     default:
       return ''
   }
@@ -118,6 +111,7 @@ interface ShortcutRecorderProps {
 
 /** 点击后直接按组合键录制；录制期间主进程会暂停全局快捷键，避免按键直接切换窗口 */
 function ShortcutRecorder({ value, disabled, onChange }: ShortcutRecorderProps) {
+  const { t } = useTranslation()
   const [recording, setRecording] = useState(false)
   const [hint, setHint] = useState<string | null>(null)
   const onChangeRef = useRef(onChange)
@@ -147,7 +141,7 @@ function ShortcutRecorder({ value, disabled, onChange }: ShortcutRecorderProps) 
 
       const accelerator = toAccelerator(event)
       if (!accelerator) {
-        setHint('请按下包含修饰键（⌘ / Ctrl / Alt / Shift）的组合')
+        setHint(t('settings.shortcutCapture.hint'))
         return
       }
 
@@ -165,7 +159,7 @@ function ShortcutRecorder({ value, disabled, onChange }: ShortcutRecorderProps) 
       window.removeEventListener('keydown', onKeyDown, true)
       window.removeEventListener('blur', stop)
     }
-  }, [recording])
+  }, [recording, t])
 
   // 切换 Tab / 关闭设置窗口时确保恢复全局快捷键
   useEffect(() => {
@@ -192,7 +186,7 @@ function ShortcutRecorder({ value, disabled, onChange }: ShortcutRecorderProps) 
           void window.api.setShortcutCapturing(true)
         }}
       >
-        {recording ? '按下组合键…' : value}
+        {recording ? t('settings.shortcutCapture.press') : value}
       </Button>
       {hint ? <span className="text-[10px] text-destructive">{hint}</span> : null}
     </div>
@@ -247,6 +241,7 @@ function OptionGroup({ value, options, onChange }: OptionGroupProps) {
 }
 
 export default function SettingsPage() {
+  const { t } = useTranslation()
   const settings = useSettingsStore((state) => state.settings)
   const loadSettings = useSettingsStore((state) => state.load)
   const update = useSettingsStore((state) => state.update)
@@ -272,21 +267,51 @@ export default function SettingsPage() {
     void initAuth()
   }, [loadSettings, initAuth])
 
-  const updateText = updateMessage(updateStatus)
+  const updateText = updateMessage(t, updateStatus)
+
+  const hideDelayOptions: readonly Option[] = HIDE_DELAY_VALUES.map((value) => ({
+    value,
+    label:
+      value === 0
+        ? t('settings.options.immediate')
+        : t('settings.options.seconds', { count: value / 1000 })
+  }))
+
+  const maxClipsOptions: readonly Option[] = MAX_CLIPS_VALUES.map((value) => ({
+    value,
+    label: String(value)
+  }))
+
+  const expireDaysOptions: readonly Option[] = EXPIRE_DAYS_VALUES.map((value) => ({
+    value,
+    label: value === 0 ? t('settings.options.never') : t('settings.options.days', { count: value })
+  }))
+
+  const themeOptions: readonly Option[] = [
+    { value: 'system', label: t('settings.options.themeSystem') },
+    { value: 'light', label: t('settings.options.themeLight') },
+    { value: 'dark', label: t('settings.options.themeDark') }
+  ]
+
+  const languageOptions: readonly Option[] = [
+    { value: 'system', label: t('settings.options.languageSystem') },
+    { value: 'zh-CN', label: t('settings.options.languageZh') },
+    { value: 'en-US', label: t('settings.options.languageEn') }
+  ]
 
   return (
     <div className="flex h-screen flex-col bg-background">
       <header className="flex items-baseline justify-between border-b border-border/60 px-6 py-4">
-        <h1 className="text-sm font-semibold tracking-tight">设置</h1>
+        <h1 className="text-sm font-semibold tracking-tight">{t('settings.title')}</h1>
         <span className="text-[11px] text-muted-foreground">ClipSync</span>
       </header>
 
       <Tabs defaultValue="general" className="min-h-0 flex-1 gap-0">
         <div className="px-6 pt-4">
           <TabsList>
-            <TabsTrigger value="general">通用</TabsTrigger>
-            <TabsTrigger value="account">账号</TabsTrigger>
-            <TabsTrigger value="about">关于</TabsTrigger>
+            <TabsTrigger value="general">{t('settings.tabs.general')}</TabsTrigger>
+            <TabsTrigger value="account">{t('settings.tabs.account')}</TabsTrigger>
+            <TabsTrigger value="about">{t('settings.tabs.about')}</TabsTrigger>
           </TabsList>
         </div>
 
@@ -298,29 +323,41 @@ export default function SettingsPage() {
               </div>
             ) : (
               <section className="divide-y divide-border/60 rounded-lg border border-border/60 bg-card/40">
-                <SettingsRow label="开机自启" description="登录系统后自动启动 ClipSync">
+                <SettingsRow
+                  label={t('settings.autoLaunch.label')}
+                  description={t('settings.autoLaunch.description')}
+                >
                   <Switch
                     checked={settings.autoLaunch}
                     onCheckedChange={(checked) => void update({ autoLaunch: checked })}
                   />
                 </SettingsRow>
 
-                <SettingsRow label="呼出快捷键" description="在任意应用中呼出或隐藏悬浮窗">
+                <SettingsRow
+                  label={t('settings.shortcut.label')}
+                  description={t('settings.shortcut.description')}
+                >
                   <ShortcutRecorder
                     value={settings.toggleAccelerator}
                     onChange={(accelerator) => update({ toggleAccelerator: accelerator })}
                   />
                 </SettingsRow>
 
-                <SettingsRow label="失焦隐藏" description="悬浮窗失去焦点后延迟收起">
+                <SettingsRow
+                  label={t('settings.hideDelay.label')}
+                  description={t('settings.hideDelay.description')}
+                >
                   <OptionGroup
                     value={settings.hideDelayMs}
-                    options={HIDE_DELAY_OPTIONS}
+                    options={hideDelayOptions}
                     onChange={(value) => void update({ hideDelayMs: Number(value) })}
                   />
                 </SettingsRow>
 
-                <SettingsRow label="自动同步" description="新复制的剪贴板内容自动上传到云端">
+                <SettingsRow
+                  label={t('settings.autoSync.label')}
+                  description={t('settings.autoSync.description')}
+                >
                   <Switch
                     checked={settings.autoSyncNewClip}
                     onCheckedChange={(checked) => void update({ autoSyncNewClip: checked })}
@@ -328,32 +365,53 @@ export default function SettingsPage() {
                 </SettingsRow>
 
                 <SettingsRow
-                  label="最多显示"
-                  description="列表中最多展示的记录数，超出部分不再显示"
+                  label={t('settings.maxClips.label')}
+                  description={t('settings.maxClips.description')}
                 >
                   <OptionGroup
                     value={settings.maxClips}
-                    options={MAX_CLIPS_OPTIONS}
+                    options={maxClipsOptions}
                     onChange={(value) => void update({ maxClips: Number(value) })}
                   />
                 </SettingsRow>
 
-                <SettingsRow label="自动清理" description="删除超过设定天数未使用的记录">
+                <SettingsRow
+                  label={t('settings.cleanup.label')}
+                  description={t('settings.cleanup.description')}
+                >
                   <OptionGroup
                     value={settings.expireDays}
-                    options={EXPIRE_DAYS_OPTIONS}
+                    options={expireDaysOptions}
                     onChange={(value) => void update({ expireDays: Number(value) })}
                   />
                 </SettingsRow>
 
-                <SettingsRow label="主题" description="切换界面配色，跟随系统时自动适配">
+                <SettingsRow
+                  label={t('settings.theme.label')}
+                  description={t('settings.theme.description')}
+                >
                   <OptionGroup
                     value={settings.theme}
-                    options={THEME_OPTIONS}
+                    options={themeOptions}
                     onChange={(value) => {
                       const theme = value as Theme
                       applyTheme(theme)
                       void update({ theme })
+                    }}
+                  />
+                </SettingsRow>
+
+                <SettingsRow
+                  label={t('settings.language.label')}
+                  description={t('settings.language.description')}
+                >
+                  <OptionGroup
+                    value={settings.language}
+                    options={languageOptions}
+                    onChange={(value) => {
+                      const language = value as Language
+                      applyLanguage(language)
+                      void update({ language })
                     }}
                   />
                 </SettingsRow>
@@ -374,9 +432,9 @@ export default function SettingsPage() {
               </section>
             ) : (
               <section className="rounded-lg border border-border/60 bg-card/40 p-4">
-                <p className="text-xs font-medium">未登录</p>
+                <p className="text-xs font-medium">{t('settings.account.notSignedIn')}</p>
                 <p className="mt-1 text-[11px] text-muted-foreground">
-                  在悬浮窗中登录后，可在此查看账号信息。
+                  {t('settings.account.notSignedInDescription')}
                 </p>
               </section>
             )}
@@ -384,7 +442,10 @@ export default function SettingsPage() {
 
           <TabsContent value="about" className="flex flex-col gap-3">
             <section className="divide-y divide-border/60 rounded-lg border border-border/60 bg-card/40">
-              <SettingsRow label="自动更新" description="启动时自动检查并下载新版本">
+              <SettingsRow
+                label={t('settings.about.autoUpdate.label')}
+                description={t('settings.about.autoUpdate.description')}
+              >
                 <Switch
                   checked={settings.autoUpdate}
                   onCheckedChange={(checked) => void update({ autoUpdate: checked })}
@@ -392,8 +453,10 @@ export default function SettingsPage() {
               </SettingsRow>
 
               <SettingsRow
-                label="检查更新"
-                description={`当前版本 v${updateStatus?.currentVersion ?? '—'}`}
+                label={t('settings.about.check')}
+                description={t('settings.about.currentVersion', {
+                  version: updateStatus?.currentVersion ?? '—'
+                })}
               >
                 <Button
                   variant="outline"
@@ -403,7 +466,9 @@ export default function SettingsPage() {
                   }
                   onClick={() => void window.api.checkForUpdates()}
                 >
-                  {updateStatus?.state === 'checking' ? '检查中…' : '检查更新'}
+                  {updateStatus?.state === 'checking'
+                    ? t('settings.about.checking')
+                    : t('settings.about.check')}
                 </Button>
               </SettingsRow>
             </section>
@@ -423,7 +488,7 @@ export default function SettingsPage() {
             <section className="rounded-lg border border-border/60 bg-card/40 p-4">
               <p className="text-xs font-medium">ClipSync</p>
               <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-                本地优先的剪贴板历史工具，登录后可跨设备同步。
+                {t('settings.about.description')}
               </p>
             </section>
           </TabsContent>

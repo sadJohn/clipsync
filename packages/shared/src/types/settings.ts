@@ -1,3 +1,5 @@
+import type { Language } from '../i18n/language'
+
 /**
  * 应用设置模型。
  * 由主进程 SettingsStore 持久化到 userData/settings.json，渲染进程通过 IPC 读写。
@@ -23,4 +25,6 @@ export interface Settings {
   autoSyncNewClip: boolean
   /** 界面主题 */
   theme: Theme
+  /** 界面语言，system 表示跟随系统 */
+  language: Language
 }

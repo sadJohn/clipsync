@@ -1,4 +1,5 @@
 import type { ClipItemDto } from '@clipsync/shared'
+import i18n from '@/i18n'
 import { getAuthToken } from './auth-token'
 import { SERVER_URL } from './server'
 
@@ -15,7 +16,7 @@ export class ApiError extends Error {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAuthToken()
   if (!token) {
-    throw new ApiError('尚未登录', 401)
+    throw new ApiError(i18n.t('errors.notSignedIn'), 401)
   }
 
   const response = await fetch(`${SERVER_URL}${path}`, {
@@ -28,7 +29,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   })
 
   if (!response.ok) {
-    let message = `请求失败 (${response.status})`
+    let message = i18n.t('errors.requestFailed', { status: response.status })
     try {
       const body = (await response.json()) as { message?: string | string[] }
       if (Array.isArray(body.message)) message = body.message.join('，')

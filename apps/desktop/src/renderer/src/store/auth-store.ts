@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import i18n from '@/i18n'
 import { authClient } from '@/lib/auth-client'
 import { clearAuthToken, getAuthToken } from '@/lib/auth-token'
 
@@ -24,7 +25,7 @@ function errorMessage(error: unknown): string {
     const message = (error as { message?: unknown }).message
     if (typeof message === 'string' && message.length > 0) return message
   }
-  return '操作失败，请稍后重试'
+  return i18n.t('errors.operationFailed')
 }
 
 function toUser(user: { id: string; name: string; email: string }): AuthUser {
@@ -88,14 +89,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   signIn: async (email, password) => {
     const { data, error } = await authClient.signIn.email({ email, password })
     if (error) throw new Error(errorMessage(error))
-    if (!data?.user) throw new Error('登录失败，请检查邮箱与密码')
+    if (!data?.user) throw new Error(i18n.t('errors.signInFailed'))
     set({ status: 'authenticated', user: toUser(data.user) })
   },
 
   signUp: async (name, email, password) => {
     const { data, error } = await authClient.signUp.email({ name, email, password })
     if (error) throw new Error(errorMessage(error))
-    if (!data?.user) throw new Error('注册失败，请稍后重试')
+    if (!data?.user) throw new Error(i18n.t('errors.signUpFailed'))
     set({ status: 'authenticated', user: toUser(data.user) })
   },
 
