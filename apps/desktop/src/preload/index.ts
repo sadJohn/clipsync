@@ -1,4 +1,9 @@
-import { IpcChannels, type ExpiredClipRef, type LocalClipRecord } from '@clipsync/shared'
+import {
+  IpcChannels,
+  type ExpiredClipRef,
+  type LocalClipRecord,
+  type Settings
+} from '@clipsync/shared'
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 
 export interface DesktopApi {
@@ -24,6 +29,12 @@ export interface DesktopApi {
   deleteLocalClips: (ids: string[]) => Promise<void>
   /** 隐藏悬浮窗 */
   hideWindow: () => Promise<void>
+  /** 读取应用设置 */
+  getSettings: () => Promise<Settings>
+  /** 合并写入应用设置，返回最新设置 */
+  setSettings: (patch: Partial<Settings>) => Promise<Settings>
+  /** 打开设置窗口 */
+  openSettings: () => Promise<void>
   /** 读取主进程加密保存的认证 Token */
   getAuthToken: () => Promise<string | null>
   /** 交由主进程加密保存认证 Token */
@@ -72,6 +83,12 @@ const api: DesktopApi = {
     ipcRenderer.invoke(IpcChannels.DELETE_LOCAL_CLIPS, ids) as Promise<void>,
 
   hideWindow: () => ipcRenderer.invoke(IpcChannels.WINDOW_HIDE) as Promise<void>,
+
+  getSettings: () => ipcRenderer.invoke(IpcChannels.SETTINGS_GET) as Promise<Settings>,
+
+  setSettings: (patch) => ipcRenderer.invoke(IpcChannels.SETTINGS_SET, patch) as Promise<Settings>,
+
+  openSettings: () => ipcRenderer.invoke(IpcChannels.SETTINGS_OPEN) as Promise<void>,
 
   getAuthToken: () => ipcRenderer.invoke(IpcChannels.AUTH_TOKEN_GET) as Promise<string | null>,
 

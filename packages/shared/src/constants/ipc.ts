@@ -24,6 +24,12 @@ export const IpcChannels = {
   DELETE_LOCAL_CLIPS: 'local-clips:delete-many',
   /** 渲染进程 -> 主进程：隐藏主窗口 */
   WINDOW_HIDE: 'window:hide',
+  /** 渲染进程 -> 主进程：读取应用设置 */
+  SETTINGS_GET: 'settings:get',
+  /** 渲染进程 -> 主进程：合并写入应用设置，返回最新设置 */
+  SETTINGS_SET: 'settings:set',
+  /** 渲染进程 -> 主进程：打开设置窗口 */
+  SETTINGS_OPEN: 'settings:open',
   /** 渲染进程 -> 主进程：读取加密保存的认证 Token */
   AUTH_TOKEN_GET: 'auth-token:get',
   /** 渲染进程 -> 主进程：加密保存认证 Token */

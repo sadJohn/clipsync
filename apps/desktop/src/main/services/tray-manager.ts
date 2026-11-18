@@ -6,6 +6,8 @@ interface TrayManagerOptions {
   onTrayClick: () => void
   /** 右键菜单里的显示 / 隐藏 */
   onToggle: () => void
+  /** 右键菜单里的设置窗口 */
+  onOpenSettings: () => void
   onQuit: () => void
 }
 
@@ -23,6 +25,7 @@ export function createTrayManager(options: TrayManagerOptions): Tray {
 
   const menu = Menu.buildFromTemplate([
     { label: '显示 / 隐藏', click: options.onToggle },
+    { label: '设置…', click: options.onOpenSettings },
     { type: 'separator' },
     { label: '退出 ClipSync', click: options.onQuit }
   ])

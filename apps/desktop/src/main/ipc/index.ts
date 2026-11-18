@@ -1,7 +1,9 @@
 import { clipboard, ipcMain } from 'electron'
-import { IpcChannels, localClipRecordSchema } from '@clipsync/shared'
+import { IpcChannels, localClipRecordSchema, type Settings } from '@clipsync/shared'
 import * as authTokenStore from '../services/auth-token-store'
 import { localClipService } from '../services/local-clip-service'
+import * as settingsStore from '../services/settings-store'
+import { openSettingsWindow } from '../services/settings-window'
 import { hideWindow } from '../window'
 
 interface IpcHandlerOptions {
@@ -77,6 +79,19 @@ export function registerIpcHandlers(options: IpcHandlerOptions): void {
 
   ipcMain.handle(IpcChannels.WINDOW_HIDE, () => {
     hideWindow()
+  })
+
+  ipcMain.handle(IpcChannels.SETTINGS_GET, () => settingsStore.getSettings())
+
+  ipcMain.handle(IpcChannels.SETTINGS_SET, (_event, patch: unknown) => {
+    if (!patch || typeof patch !== 'object' || Array.isArray(patch)) {
+      throw new Error('设置补丁必须是对象')
+    }
+    return settingsStore.setSettings(patch as Partial<Settings>)
+  })
+
+  ipcMain.handle(IpcChannels.SETTINGS_OPEN, () => {
+    openSettingsWindow()
   })
 
   ipcMain.handle(IpcChannels.AUTH_TOKEN_GET, () => authTokenStore.getToken())

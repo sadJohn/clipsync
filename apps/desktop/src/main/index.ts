@@ -6,6 +6,7 @@ import { closeDb } from './db/client'
 import { registerIpcHandlers } from './ipc'
 import { ClipboardWatcher } from './services/clipboard-watcher'
 import { registerGlobalShortcuts, unregisterGlobalShortcuts } from './services/shortcut-manager'
+import { openSettingsWindow } from './services/settings-window'
 import { createTrayManager } from './services/tray-manager'
 import {
   createMainWindow,
@@ -84,6 +85,9 @@ if (!hasSingleInstanceLock) {
       iconPath: join(__dirname, '../../resources/icon.png'),
       onTrayClick: toggleWindowFromTray,
       onToggle: toggleWindow,
+      onOpenSettings: () => {
+        openSettingsWindow()
+      },
       onQuit: () => {
         markQuitting()
         app.quit()

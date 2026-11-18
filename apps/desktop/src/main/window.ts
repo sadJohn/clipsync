@@ -61,15 +61,20 @@ export function createMainWindow(): BrowserWindow {
     return { action: 'deny' }
   })
 
-  const rendererUrl = process.env['ELECTRON_RENDERER_URL']
-  if (rendererUrl) {
-    void win.loadURL(rendererUrl)
-  } else {
-    void win.loadURL('app://clipsync/index.html')
-  }
+  loadRenderer(win)
 
   mainWindow = win
   return win
+}
+
+/** 加载渲染页；hash 用于在同一套产物里区分主窗口与设置窗口 */
+export function loadRenderer(win: BrowserWindow, hash = ''): void {
+  const rendererUrl = process.env['ELECTRON_RENDERER_URL']
+  if (rendererUrl) {
+    void win.loadURL(`${rendererUrl}${hash}`)
+  } else {
+    void win.loadURL(`app://clipsync/index.html${hash}`)
+  }
 }
 
 /** 将窗口放在当前鼠标所在屏幕的中上部 */

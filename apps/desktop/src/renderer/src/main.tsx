@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 import { hydrateAuthToken } from './lib/auth-token'
+import SettingsPage from './pages/settings-page'
 import './index.css'
 
 const container = document.getElementById('root')
@@ -11,6 +12,9 @@ if (!container) {
 }
 
 const root = createRoot(container)
+
+/** 主窗口与设置窗口共用同一份产物，通过 hash 区分 */
+const isSettingsWindow = window.location.hash.startsWith('#/settings')
 
 /**
  * 先把加密保存的 Token 读入内存再渲染，
@@ -23,11 +27,7 @@ async function bootstrap(): Promise<void> {
     console.warn('[auth] Token 读取失败，按未登录处理', error)
   }
 
-  root.render(
-    <StrictMode>
-      <App />
-    </StrictMode>
-  )
+  root.render(<StrictMode>{isSettingsWindow ? <SettingsPage /> : <App />}</StrictMode>)
 }
 
 void bootstrap()

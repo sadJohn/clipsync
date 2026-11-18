@@ -1,5 +1,5 @@
 import type { ClipType } from '@clipsync/shared'
-import { Loader2, LogIn, LogOut, Search } from 'lucide-react'
+import { Loader2, LogIn, LogOut, Search, Settings } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AuthDialog } from '@/components/auth-dialog'
 import { ClipCard } from '@/components/clip-card'
@@ -129,6 +129,15 @@ export default function App() {
               登录
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 text-muted-foreground"
+            title="设置"
+            onClick={() => void window.api.openSettings()}
+          >
+            <Settings className="size-3.5" />
+          </Button>
         </div>
       </header>
 
