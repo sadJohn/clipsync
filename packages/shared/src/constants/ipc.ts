@@ -43,7 +43,9 @@ export const IpcChannels = {
   /** 渲染进程 -> 主进程：加密保存认证 Token */
   AUTH_TOKEN_SET: 'auth-token:set',
   /** 渲染进程 -> 主进程：清除已保存的认证 Token */
-  AUTH_TOKEN_CLEAR: 'auth-token:clear'
+  AUTH_TOKEN_CLEAR: 'auth-token:clear',
+  /** 渲染进程 -> 主进程：转发开发态日志（仅主进程终端输出） */
+  RENDERER_LOG: 'renderer:log'
 } as const
 
 export type IpcChannel = (typeof IpcChannels)[keyof typeof IpcChannels]

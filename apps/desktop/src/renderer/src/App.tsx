@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useCloudSync } from '@/hooks/use-cloud-sync'
 import { getAuthToken } from '@/lib/auth-token'
 import { pushClip, purgeExpiredClips } from '@/lib/clip-sync'
+import { notifySyncError } from '@/lib/sync-notice'
 import { applyTheme } from '@/lib/theme'
 import { useAuthStore } from '@/store/auth-store'
 import { applyMaxClips, useClipStore } from '@/store/clip-store'
@@ -95,6 +96,7 @@ export default function App() {
           await pushClip(clip)
         } catch (syncError) {
           console.warn('[sync] 新条目上传失败', syncError)
+          notifySyncError('新剪贴板内容同步失败')
         }
       })()
     })

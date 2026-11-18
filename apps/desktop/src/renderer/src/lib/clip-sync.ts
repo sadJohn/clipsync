@@ -2,6 +2,7 @@ import type { ClipItemDto, LocalClipRecord } from '@clipsync/shared'
 import { enqueueClipTask, useClipStore } from '@/store/clip-store'
 import { ApiError, clipsApi } from './api'
 import { getAuthToken } from './auth-token'
+import { notifySyncError } from './sync-notice'
 
 export function toClipDto(record: LocalClipRecord): ClipItemDto {
   return {
@@ -29,14 +30,20 @@ export function pushClip(record: LocalClipRecord): Promise<void> {
 /** 上传本地所有未同步记录；单条失败不影响其它记录 */
 export async function pushPendingClips(): Promise<void> {
   const localClips = await window.api.getLocalClips()
+  let failed = 0
 
   for (const clip of localClips) {
     if (clip.isSynced) continue
     try {
       await pushClip(clip)
     } catch (error) {
+      failed += 1
       console.warn('[sync] 上传本地记录失败', clip.id, error)
     }
+  }
+
+  if (failed > 0) {
+    notifySyncError(`${failed} 条本地记录同步失败，请稍后重试`)
   }
 }
 

@@ -133,4 +133,11 @@ export function registerIpcHandlers(options: IpcHandlerOptions): void {
   ipcMain.handle(IpcChannels.AUTH_TOKEN_CLEAR, () => {
     authTokenStore.clearToken()
   })
+
+  // 渲染进程的 console 只进 DevTools，转发到主进程终端便于排查同步问题
+  ipcMain.on(IpcChannels.RENDERER_LOG, (_event, level: unknown, message: unknown) => {
+    if (typeof message !== 'string') return
+    if (level !== 'warn' && level !== 'error') return
+    console.log(`[renderer:${level}] ${message}`)
+  })
 }

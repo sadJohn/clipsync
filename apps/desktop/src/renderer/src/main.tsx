@@ -15,6 +15,30 @@ if (!container) {
 
 const root = createRoot(container)
 
+/** 把参数转成可读文本，避免 Error / 对象被转成 [object Object] */
+function formatLogArg(arg: unknown): string {
+  if (arg instanceof Error) return `${arg.name}: ${arg.message}`
+  if (typeof arg === 'string') return arg
+  try {
+    return JSON.stringify(arg)
+  } catch {
+    return String(arg)
+  }
+}
+
+/** 渲染进程的 console 只进 DevTools，转发到主进程终端便于排查同步问题 */
+function forwardConsole(): void {
+  for (const level of ['warn', 'error'] as const) {
+    const original = console[level].bind(console)
+    console[level] = (...args: unknown[]) => {
+      original(...args)
+      window.api.logRenderer(level, args.map(formatLogArg).join(' '))
+    }
+  }
+}
+
+forwardConsole()
+
 /** 主窗口与设置窗口共用同一份产物，通过 hash 区分 */
 const isSettingsWindow = window.location.hash.startsWith('#/settings')
 

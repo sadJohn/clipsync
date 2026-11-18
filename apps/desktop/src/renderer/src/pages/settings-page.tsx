@@ -2,6 +2,7 @@ import type { Theme, UpdateStatus } from '@clipsync/shared'
 import { Loader2 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
+import { Toaster } from '@/components/ui/sonner'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { applyTheme } from '@/lib/theme'
@@ -428,6 +429,8 @@ export default function SettingsPage() {
           </TabsContent>
         </div>
       </Tabs>
+
+      <Toaster theme={settings.theme} />
     </div>
   )
 }

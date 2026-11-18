@@ -36,6 +36,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {
       // 响应体不是 JSON 时使用默认文案
     }
+    console.warn(`[api] ${init?.method ?? 'GET'} ${path} -> ${response.status}`, message)
     throw new ApiError(message, response.status)
   }
 

@@ -50,6 +50,8 @@ export interface DesktopApi {
   setAuthToken: (token: string) => Promise<void>
   /** 清除主进程保存的认证 Token */
   clearAuthToken: () => Promise<void>
+  /** 把渲染进程的警告 / 错误转发到主进程终端 */
+  logRenderer: (level: 'warn' | 'error', message: string) => void
 }
 
 const api: DesktopApi = {
@@ -120,7 +122,11 @@ const api: DesktopApi = {
 
   setAuthToken: (token) => ipcRenderer.invoke(IpcChannels.AUTH_TOKEN_SET, token) as Promise<void>,
 
-  clearAuthToken: () => ipcRenderer.invoke(IpcChannels.AUTH_TOKEN_CLEAR) as Promise<void>
+  clearAuthToken: () => ipcRenderer.invoke(IpcChannels.AUTH_TOKEN_CLEAR) as Promise<void>,
+
+  logRenderer: (level, message) => {
+    ipcRenderer.send(IpcChannels.RENDERER_LOG, level, message)
+  }
 }
 
 contextBridge.exposeInMainWorld('api', api)

@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { getAuthToken } from '@/lib/auth-token'
 import { purgeExpiredClips, syncWithCloud } from '@/lib/clip-sync'
 import { connectSyncSocket } from '@/lib/socket'
+import { notifySyncError } from '@/lib/sync-notice'
 import { useClipStore } from '@/store/clip-store'
 
 /**
@@ -62,6 +63,7 @@ export function useCloudSync(userId: string | null): void {
         await syncWithCloud()
       } catch (error: unknown) {
         console.warn('[sync] 云同步失败', error)
+        notifySyncError('云端同步失败，请检查网络后重试')
       }
       try {
         await purgeExpiredClips()
