@@ -54,7 +54,21 @@ const enUS = {
     submitSignUp: 'Sign up and sign in',
     signInSuccess: 'Signed in',
     signUpSuccess: 'Account created and signed in',
-    actionFailed: 'Something went wrong'
+    actionFailed: 'Something went wrong',
+    forgotPassword: 'Forgot password?',
+    resetTitle: 'Reset password',
+    resetDescription: 'Enter your account email and we will send a verification code.',
+    sendCode: 'Send code',
+    resendCode: 'Resend code',
+    codeSent: 'If the account exists, a code has been sent',
+    otpPlaceholder: '6-digit code',
+    newPasswordPlaceholder: 'New password (at least 8 characters)',
+    confirmPasswordPlaceholder: 'Confirm new password',
+    resetSubmit: 'Reset password',
+    resetSuccess: 'Password reset. Please sign in again',
+    backToSignIn: 'Back to sign in',
+    passwordTooShort: 'Password must be at least 8 characters',
+    passwordMismatch: 'The passwords do not match'
   },
   settings: {
     title: 'Settings',
@@ -141,7 +155,16 @@ const enUS = {
       signedOut: 'Signed out',
       accountDeleted: 'Account deleted',
       updateFailed: 'Failed to update the account. Please try again',
-      deleteFailed: 'Failed to delete the account. Please try again'
+      deleteFailed: 'Failed to delete the account. Please try again',
+      emailLabel: 'Email',
+      newEmailPlaceholder: 'New email address',
+      sendEmailCode: 'Send code',
+      resendEmailCode: 'Resend code',
+      emailCodeSent: 'Verification code sent to the new email',
+      emailOtpPlaceholder: 'Enter the code sent to the new email',
+      confirmEmailChange: 'Confirm change',
+      emailChanged: 'Email updated',
+      emailChangeFailed: 'Failed to change email. Please try again'
     },
     about: {
       autoUpdate: {

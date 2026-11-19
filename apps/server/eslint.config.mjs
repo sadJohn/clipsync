@@ -8,7 +8,7 @@ import baseConfig from '@clipsync/eslint-config'
 export default [
   ...baseConfig,
   {
-    files: ['src/**/*.ts'],
+    files: ['src/**/*.ts', 'src/**/*.tsx'],
     rules: {
       '@typescript-eslint/consistent-type-imports': 'off'
     }

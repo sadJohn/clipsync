@@ -105,7 +105,10 @@
     - 改密码：`authClient.changePassword()`，前端校验长度与两次输入一致 ✅
     - 退出登录：设置页直接调用 `signOut` ✅
     - 删除账号：服务端开启 `user.deleteUser.enabled`，前端输入密码二次确认，成功后清除本地 Token ✅
-    - 改邮箱 / 忘记密码：需加 `email-verification` 插件（发验证邮件）—— 远期
+    - 改邮箱 / 忘记密码：接入 `emailOTP` 插件，邮箱验证码完成改邮箱与密码重置 ✅
+      - 登录弹窗「忘记密码」：发送验证码 → 输入验证码 + 新密码
+      - 设置页「账号」：输入新邮箱 → 验证码 → 确认修改
+      - 服务端用 React Email 渲染模板，发送支持 Resend / SMTP 二选一（配了 `RESEND_API_KEY` 优先走 Resend）；都未配置时开发环境把验证码打印到日志，生产环境报错
 
 16. **跳过特定应用的剪贴板**（远期）
     - 主进程 `ClipboardWatcher` 需读当前前台 app bundle id

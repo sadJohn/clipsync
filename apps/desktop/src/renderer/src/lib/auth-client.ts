@@ -1,4 +1,5 @@
 import { createAuthClient } from 'better-auth/react'
+import { emailOTPClient } from 'better-auth/client/plugins'
 import { getAuthToken, setAuthToken } from './auth-token'
 import { SERVER_URL } from './server'
 
@@ -9,6 +10,7 @@ import { SERVER_URL } from './server'
  */
 export const authClient = createAuthClient({
   baseURL: SERVER_URL,
+  plugins: [emailOTPClient()],
   fetchOptions: {
     auth: {
       type: 'Bearer',

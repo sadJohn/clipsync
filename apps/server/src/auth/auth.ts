@@ -1,8 +1,9 @@
 import { betterAuth } from 'better-auth/minimal'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
-import { bearer } from 'better-auth/plugins'
+import { bearer, emailOTP } from 'better-auth/plugins'
 import { env } from '../config/env.js'
 import { prismaService } from '../prisma/prisma.service.js'
+import { sendVerificationOTP } from './email.js'
 import { trustedOrigins } from './trusted-origins.js'
 
 export const auth = betterAuth({
@@ -21,5 +22,13 @@ export const auth = betterAuth({
     }
   },
   trustedOrigins,
-  plugins: [bearer()]
+  plugins: [
+    bearer(),
+    emailOTP({
+      sendVerificationOTP,
+      changeEmail: {
+        enabled: true
+      }
+    })
+  ]
 })

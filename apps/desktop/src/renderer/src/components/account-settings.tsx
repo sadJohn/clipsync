@@ -24,8 +24,16 @@ export function AccountSettings() {
   const updateName = useAuthStore((state) => state.updateName)
   const changePassword = useAuthStore((state) => state.changePassword)
   const deleteAccount = useAuthStore((state) => state.deleteAccount)
+  const requestEmailChange = useAuthStore((state) => state.requestEmailChange)
+  const changeEmail = useAuthStore((state) => state.changeEmail)
 
   const [savingName, setSavingName] = useState(false)
+
+  const [newEmail, setNewEmail] = useState('')
+  const [emailOtp, setEmailOtp] = useState('')
+  const [emailOtpSent, setEmailOtpSent] = useState(false)
+  const [sendingEmailCode, setSendingEmailCode] = useState(false)
+  const [changingEmail, setChangingEmail] = useState(false)
 
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -83,6 +91,42 @@ export function AccountSettings() {
       toast.error(error instanceof Error ? error.message : t('settings.account.updateFailed'))
     } finally {
       setSavingPassword(false)
+    }
+  }
+
+  async function handleRequestEmailChange(): Promise<void> {
+    const nextEmail = newEmail.trim()
+    if (!user || !nextEmail || nextEmail === user.email) return
+
+    setSendingEmailCode(true)
+    try {
+      await requestEmailChange(nextEmail)
+      setEmailOtpSent(true)
+      toast.success(t('settings.account.emailCodeSent'))
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('settings.account.emailChangeFailed'))
+    } finally {
+      setSendingEmailCode(false)
+    }
+  }
+
+  async function handleChangeEmail(event: SubmitEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault()
+    const nextEmail = newEmail.trim()
+    const code = emailOtp.trim()
+    if (!nextEmail || !code) return
+
+    setChangingEmail(true)
+    try {
+      await changeEmail(nextEmail, code)
+      setNewEmail('')
+      setEmailOtp('')
+      setEmailOtpSent(false)
+      toast.success(t('settings.account.emailChanged'))
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('settings.account.emailChangeFailed'))
+    } finally {
+      setChangingEmail(false)
     }
   }
 
@@ -148,6 +192,57 @@ export function AccountSettings() {
             {t('settings.account.saveName')}
           </Button>
         </form>
+      </section>
+
+      <section className="rounded-lg border border-border/60 bg-card/40 p-4">
+        <p className="text-xs font-medium">{t('settings.account.emailLabel')}</p>
+        <p className="mt-0.5 text-[11px] text-muted-foreground">{user.email}</p>
+        <div className="mt-3 flex items-center gap-2">
+          <Input
+            type="email"
+            value={newEmail}
+            placeholder={t('settings.account.newEmailPlaceholder')}
+            autoComplete="email"
+            readOnly={emailOtpSent}
+            onChange={(event) => setNewEmail(event.target.value)}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="shrink-0"
+            disabled={sendingEmailCode || !newEmail.trim() || newEmail.trim() === user.email}
+            onClick={() => void handleRequestEmailChange()}
+          >
+            {emailOtpSent
+              ? t('settings.account.resendEmailCode')
+              : t('settings.account.sendEmailCode')}
+          </Button>
+        </div>
+        {emailOtpSent ? (
+          <form
+            className="mt-2 flex items-center gap-2"
+            onSubmit={(event) => void handleChangeEmail(event)}
+          >
+            <Input
+              value={emailOtp}
+              placeholder={t('settings.account.emailOtpPlaceholder')}
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              required
+              onChange={(event) => setEmailOtp(event.target.value)}
+            />
+            <Button
+              type="submit"
+              size="sm"
+              className="shrink-0"
+              disabled={changingEmail || !emailOtp.trim()}
+            >
+              {t('settings.account.confirmEmailChange')}
+            </Button>
+          </form>
+        ) : null}
       </section>
 
       <section className="rounded-lg border border-border/60 bg-card/40 p-4">

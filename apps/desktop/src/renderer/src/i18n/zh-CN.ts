@@ -54,7 +54,21 @@ const zhCN: typeof enUS = {
     submitSignUp: '注册并登录',
     signInSuccess: '登录成功',
     signUpSuccess: '注册成功，已自动登录',
-    actionFailed: '操作失败'
+    actionFailed: '操作失败',
+    forgotPassword: '忘记密码？',
+    resetTitle: '重置密码',
+    resetDescription: '输入注册邮箱，我们会发送验证码。',
+    sendCode: '发送验证码',
+    resendCode: '重新发送',
+    codeSent: '如果账号存在，验证码已发送',
+    otpPlaceholder: '6 位验证码',
+    newPasswordPlaceholder: '新密码（至少 8 位）',
+    confirmPasswordPlaceholder: '确认新密码',
+    resetSubmit: '重置密码',
+    resetSuccess: '密码已重置，请重新登录',
+    backToSignIn: '返回登录',
+    passwordTooShort: '密码至少 8 位',
+    passwordMismatch: '两次输入的密码不一致'
   },
   settings: {
     title: '设置',
@@ -139,7 +153,16 @@ const zhCN: typeof enUS = {
       signedOut: '已退出登录',
       accountDeleted: '账号已删除',
       updateFailed: '账号更新失败，请稍后重试',
-      deleteFailed: '删除账号失败，请稍后重试'
+      deleteFailed: '删除账号失败，请稍后重试',
+      emailLabel: '邮箱',
+      newEmailPlaceholder: '新邮箱地址',
+      sendEmailCode: '发送验证码',
+      resendEmailCode: '重新发送',
+      emailCodeSent: '验证码已发送到新邮箱',
+      emailOtpPlaceholder: '输入新邮箱收到的验证码',
+      confirmEmailChange: '确认修改',
+      emailChanged: '邮箱已更新',
+      emailChangeFailed: '邮箱修改失败，请稍后重试'
     },
     about: {
       autoUpdate: {

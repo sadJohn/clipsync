@@ -21,6 +21,10 @@ interface AuthState {
   updateName: (name: string) => Promise<void>
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>
   deleteAccount: (password: string) => Promise<void>
+  requestPasswordReset: (email: string) => Promise<void>
+  resetPassword: (email: string, otp: string, password: string) => Promise<void>
+  requestEmailChange: (newEmail: string) => Promise<void>
+  changeEmail: (newEmail: string, otp: string) => Promise<void>
 }
 
 function errorMessage(error: unknown): string {
@@ -133,5 +137,26 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (error) throw new Error(errorMessage(error))
     await clearAuthToken()
     set({ status: 'anonymous', user: null })
+  },
+
+  requestPasswordReset: async (email) => {
+    const { error } = await authClient.emailOtp.requestPasswordReset({ email })
+    if (error) throw new Error(errorMessage(error))
+  },
+
+  resetPassword: async (email, otp, password) => {
+    const { error } = await authClient.emailOtp.resetPassword({ email, otp, password })
+    if (error) throw new Error(errorMessage(error))
+  },
+
+  requestEmailChange: async (newEmail) => {
+    const { error } = await authClient.emailOtp.requestEmailChange({ newEmail })
+    if (error) throw new Error(errorMessage(error))
+  },
+
+  changeEmail: async (newEmail, otp) => {
+    const { error } = await authClient.emailOtp.changeEmail({ newEmail, otp })
+    if (error) throw new Error(errorMessage(error))
+    set((state) => ({ user: state.user ? { ...state.user, email: newEmail } : state.user }))
   }
 }))
