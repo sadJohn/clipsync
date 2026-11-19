@@ -27,10 +27,42 @@ interface AuthState {
   changeEmail: (newEmail: string, otp: string) => Promise<void>
 }
 
+type AuthErrorKey =
+  | 'errors.invalidCredentials'
+  | 'errors.invalidEmail'
+  | 'errors.invalidPassword'
+  | 'errors.passwordTooShort'
+  | 'errors.userAlreadyExists'
+  | 'errors.invalidOtp'
+  | 'errors.otpExpired'
+  | 'errors.tooManyAttempts'
+  | 'errors.emailNotVerified'
+  | 'errors.accountNotFound'
+  | 'errors.sessionExpired'
+  | 'errors.bannedUser'
+
+/** Better Auth 返回的 message 是英文，按 code 映射到当前语言的提示 */
+const AUTH_ERROR_KEYS: Record<string, AuthErrorKey> = {
+  INVALID_EMAIL_OR_PASSWORD: 'errors.invalidCredentials',
+  INVALID_EMAIL: 'errors.invalidEmail',
+  INVALID_PASSWORD: 'errors.invalidPassword',
+  PASSWORD_TOO_SHORT: 'errors.passwordTooShort',
+  USER_ALREADY_EXISTS: 'errors.userAlreadyExists',
+  INVALID_OTP: 'errors.invalidOtp',
+  OTP_EXPIRED: 'errors.otpExpired',
+  TOO_MANY_ATTEMPTS: 'errors.tooManyAttempts',
+  EMAIL_NOT_VERIFIED: 'errors.emailNotVerified',
+  CREDENTIAL_ACCOUNT_NOT_FOUND: 'errors.accountNotFound',
+  SESSION_EXPIRED: 'errors.sessionExpired',
+  BANNED_USER: 'errors.bannedUser'
+}
+
 function errorMessage(error: unknown): string {
-  if (error && typeof error === 'object' && 'message' in error) {
-    const message = (error as { message?: unknown }).message
-    if (typeof message === 'string' && message.length > 0) return message
+  if (error && typeof error === 'object' && 'code' in error) {
+    const code = (error as { code?: unknown }).code
+    if (typeof code === 'string' && AUTH_ERROR_KEYS[code]) {
+      return i18n.t(AUTH_ERROR_KEYS[code])
+    }
   }
   return i18n.t('errors.operationFailed')
 }
