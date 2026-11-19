@@ -114,7 +114,32 @@ const zhCN: typeof enUS = {
     },
     account: {
       notSignedIn: '未登录',
-      notSignedInDescription: '在悬浮窗中登录后，可在此查看账号信息。'
+      notSignedInDescription: '在悬浮窗中登录后，可在此查看账号信息。',
+      nameLabel: '昵称',
+      namePlaceholder: '输入昵称',
+      saveName: '保存昵称',
+      passwordLabel: '修改密码',
+      currentPassword: '当前密码',
+      newPassword: '新密码',
+      confirmPassword: '确认新密码',
+      savePassword: '更新密码',
+      passwordMismatch: '两次输入的新密码不一致',
+      passwordTooShort: '密码至少 8 位',
+      sessionLabel: '当前登录',
+      signOut: '退出登录',
+      deleteAccount: '删除账号',
+      deleteDescription: '永久删除账号及云端数据，包括已同步的剪贴板记录。',
+      deleteConfirmTitle: '删除账号？',
+      deleteConfirmDescription: '此操作无法撤销，所有已登录设备将立即失去访问权限。',
+      deletePasswordPlaceholder: '输入密码以确认',
+      deleteConfirm: '删除账号',
+      cancel: '取消',
+      nameUpdated: '昵称已更新',
+      passwordUpdated: '密码已更新',
+      signedOut: '已退出登录',
+      accountDeleted: '账号已删除',
+      updateFailed: '账号更新失败，请稍后重试',
+      deleteFailed: '删除账号失败，请稍后重试'
     },
     about: {
       autoUpdate: {

@@ -114,7 +114,34 @@ const enUS = {
     },
     account: {
       notSignedIn: 'Not signed in',
-      notSignedInDescription: 'Sign in from the floating window to see your account here.'
+      notSignedInDescription: 'Sign in from the floating window to see your account here.',
+      nameLabel: 'Display name',
+      namePlaceholder: 'Your name',
+      saveName: 'Save name',
+      passwordLabel: 'Change password',
+      currentPassword: 'Current password',
+      newPassword: 'New password',
+      confirmPassword: 'Confirm new password',
+      savePassword: 'Update password',
+      passwordMismatch: 'The new passwords do not match',
+      passwordTooShort: 'Password must be at least 8 characters',
+      sessionLabel: 'Signed in as',
+      signOut: 'Sign out',
+      deleteAccount: 'Delete account',
+      deleteDescription:
+        'Permanently delete your account and all cloud data, including synced items.',
+      deleteConfirmTitle: 'Delete account?',
+      deleteConfirmDescription:
+        'This cannot be undone. All signed-in devices will lose access immediately.',
+      deletePasswordPlaceholder: 'Enter your password',
+      deleteConfirm: 'Delete account',
+      cancel: 'Cancel',
+      nameUpdated: 'Name updated',
+      passwordUpdated: 'Password updated',
+      signedOut: 'Signed out',
+      accountDeleted: 'Account deleted',
+      updateFailed: 'Failed to update the account. Please try again',
+      deleteFailed: 'Failed to delete the account. Please try again'
     },
     about: {
       autoUpdate: {

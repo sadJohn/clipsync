@@ -100,11 +100,11 @@
 
 ## 四期：账号 + 远期
 
-15. **账号设置**
-    - 改昵称：Better Auth `updateUser()` ✅ 默认支持
-    - 改密码：Better Auth `changePassword()` ✅ 默认支持
-    - 退出登录：已有 signOut
-    - 删除账号：需加 `account-deletion` 插件
+15. **账号设置** ✅
+    - 改昵称：设置页「账号」调用 `authClient.updateUser()` ✅
+    - 改密码：`authClient.changePassword()`，前端校验长度与两次输入一致 ✅
+    - 退出登录：设置页直接调用 `signOut` ✅
+    - 删除账号：服务端开启 `user.deleteUser.enabled`，前端输入密码二次确认，成功后清除本地 Token ✅
     - 改邮箱 / 忘记密码：需加 `email-verification` 插件（发验证邮件）—— 远期
 
 16. **跳过特定应用的剪贴板**（远期）

@@ -12,7 +12,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useCloudSync } from '@/hooks/use-cloud-sync'
 import { applyLanguage } from '@/i18n'
-import { getAuthToken } from '@/lib/auth-token'
+import { getAuthToken, hydrateAuthToken } from '@/lib/auth-token'
 import { pushClip, purgeExpiredClips } from '@/lib/clip-sync'
 import { notifySyncError } from '@/lib/sync-notice'
 import { applyTheme } from '@/lib/theme'
@@ -70,12 +70,17 @@ export default function App() {
         })
         .catch(() => {})
       void load()
+      // 设置窗口可能刚完成登录态变更（退出 / 删除账号 / 改昵称），
+      // 重新从主进程读取 Token 并校验会话，保证两个窗口状态一致
+      void hydrateAuthToken()
+        .then(() => initAuth())
+        .catch(() => {})
     }
 
     refresh()
     window.addEventListener('focus', refresh)
     return () => window.removeEventListener('focus', refresh)
-  }, [load])
+  }, [initAuth, load])
 
   // 已登录时由 useCloudSync 在拉取云端后清理，避免拉取前误删仍被其他设备使用的记录
   useEffect(() => {

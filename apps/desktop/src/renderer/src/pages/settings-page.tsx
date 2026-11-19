@@ -3,13 +3,13 @@ import type { TFunction } from 'i18next'
 import { Loader2 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { AccountSettings } from '@/components/account-settings'
 import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/sonner'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { applyLanguage } from '@/i18n'
 import { applyTheme } from '@/lib/theme'
-import { useAuthStore } from '@/store/auth-store'
 import { useSettingsStore } from '@/store/settings-store'
 
 const HIDE_DELAY_VALUES = [0, 1000, 3000, 5000] as const
@@ -248,10 +248,6 @@ export default function SettingsPage() {
   const loading = useSettingsStore((state) => state.loading)
   const error = useSettingsStore((state) => state.error)
 
-  const authStatus = useAuthStore((state) => state.status)
-  const user = useAuthStore((state) => state.user)
-  const initAuth = useAuthStore((state) => state.init)
-
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null)
 
   useEffect(() => {
@@ -264,8 +260,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     void loadSettings()
-    void initAuth()
-  }, [loadSettings, initAuth])
+  }, [loadSettings])
 
   const updateText = updateMessage(t, updateStatus)
 
@@ -421,23 +416,7 @@ export default function SettingsPage() {
           </TabsContent>
 
           <TabsContent value="account" className="flex flex-col gap-3">
-            {authStatus === 'loading' ? (
-              <div className="flex items-center justify-center py-8 text-muted-foreground">
-                <Loader2 className="size-4 animate-spin" />
-              </div>
-            ) : authStatus === 'authenticated' && user ? (
-              <section className="rounded-lg border border-border/60 bg-card/40 p-4">
-                <p className="text-xs font-medium">{user.name}</p>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">{user.email}</p>
-              </section>
-            ) : (
-              <section className="rounded-lg border border-border/60 bg-card/40 p-4">
-                <p className="text-xs font-medium">{t('settings.account.notSignedIn')}</p>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  {t('settings.account.notSignedInDescription')}
-                </p>
-              </section>
-            )}
+            <AccountSettings />
           </TabsContent>
 
           <TabsContent value="about" className="flex flex-col gap-3">

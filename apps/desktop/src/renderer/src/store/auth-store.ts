@@ -18,6 +18,9 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<void>
   signUp: (name: string, email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
+  updateName: (name: string) => Promise<void>
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>
+  deleteAccount: (password: string) => Promise<void>
 }
 
 function errorMessage(error: unknown): string {
@@ -106,6 +109,28 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch {
       // 网络异常时也允许本地退出
     }
+    await clearAuthToken()
+    set({ status: 'anonymous', user: null })
+  },
+
+  updateName: async (name) => {
+    const { error } = await authClient.updateUser({ name })
+    if (error) throw new Error(errorMessage(error))
+    set((state) => ({ user: state.user ? { ...state.user, name } : state.user }))
+  },
+
+  changePassword: async (currentPassword, newPassword) => {
+    const { error } = await authClient.changePassword({
+      currentPassword,
+      newPassword,
+      revokeOtherSessions: false
+    })
+    if (error) throw new Error(errorMessage(error))
+  },
+
+  deleteAccount: async (password) => {
+    const { error } = await authClient.deleteUser({ password })
+    if (error) throw new Error(errorMessage(error))
     await clearAuthToken()
     set({ status: 'anonymous', user: null })
   }
